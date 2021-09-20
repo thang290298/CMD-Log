@@ -47,6 +47,15 @@ elif cat /etc/*release | grep ^NAME | grep Ubuntu > /dev/null 2>&1; then
     elif [ $(lsb_release -c | grep Codename | awk '{print $2}') == 'focal' ] ;then 
         OS_VER="Ubuntu20"
     fi 
+elif cat /etc/*release | grep ^NAME | grep Debian > /dev/null 2>&1; then
+
+    OS="Debian"
+
+    if [ $(lsb_release -c | grep Codename | awk '{print $2}') == 'bullseye' ] ;then 
+        OS_VER="Debian11"
+    elif [ $(lsb_release -c | grep Codename | awk '{print $2}') == 'buster' ] ;then 
+        OS_VER="Debian10"
+    fi 
 else
     echo "Script doesn't support or verify this OS type/version"
     exit 1;
@@ -59,6 +68,10 @@ if [[ $OS == "CentOS" ]]; then
         yum install -y install rsyslog 
     fi 
 elif [[ $OS == "Ubuntu" ]]; then 
+    if ! dpkg --get-selections | grep rsyslog > /dev/null 2>&1; then
+        apt-get -y install rsyslog 
+    fi 
+elif [[ $OS == "Debian" ]]; then 
     if ! dpkg --get-selections | grep rsyslog > /dev/null 2>&1; then
         apt-get -y install rsyslog 
     fi 
@@ -82,7 +95,7 @@ if [[ -d "$HOME" ]] && [[ -f "$HOME/.bashrc" ]]; then
     echo 'export HISTTIMEFORMAT="%d/%m/%y %T "' >> ~/.bashrc
     source ~/.bashrc
 elif [[ -d "$HOME" ]] && [[ ! -f "$HOME/.bashrc" ]]; then 
-    curl -o ~/.bashrc  https://raw.githubusercontent.com/nhanhoadocs/ghichep-cmdlog/master/config/"$OS".bashrc > /dev/null 2>&1
+    curl -o ~/.bashrc  https://raw.githubusercontent.com/thang290298/CMD-Log/main/config/"$OS".bashrc > /dev/null 2>&1
 else 
     echo "Please check config \$HOME for this account"
 fi 
@@ -108,14 +121,30 @@ SKEL=/etc/skel
 CREATE_MAIL_SPOOL=yes""" > /etc/default/useradd
 
     mkdir -p /etc/skel
-    curl -o /etc/skel/.bashrc  https://raw.githubusercontent.com/nhanhoadocs/ghichep-cmdlog/master/config/"$OS".bashrc > /dev/null 2>&1
-    curl -o /etc/skel/.profile  https://raw.githubusercontent.com/nhanhoadocs/ghichep-cmdlog/master/config/"$OS".profile > /dev/null 2>&1
+    curl -o /etc/skel/.bashrc  https://raw.githubusercontent.com/thang290298/CMD-Log/main/config/"$OS".bashrc > /dev/null 2>&1
+    curl -o /etc/skel/.profile  https://raw.githubusercontent.com/thang290298/CMD-Log/main/config/"$OS".profile > /dev/null 2>&1
+elif [[ $OS == "Debian" ]]; then 
+    echo "# " >> ~/.bashrc
+    echo "alias useradd='adduser'" >> ~/.bashrc
+    mv /etc/default/{useradd,useradd.bk}
+    echo """# useradd defaults file
+GROUP=100
+HOME=/home
+INACTIVE=-1
+EXPIRE=
+SHELL=/bin/sh
+SKEL=/etc/skel
+CREATE_MAIL_SPOOL=yes""" > /etc/default/useradd
+
+    mkdir -p /etc/skel
+    curl -o /etc/skel/.bashrc  https://raw.githubusercontent.com/thang290298/CMD-Log/main/config/"$OS".bashrc > /dev/null 2>&1
+    curl -o /etc/skel/.profile  https://raw.githubusercontent.com/thang290298/CMD-Log/main/config/"$OS".profile > /dev/null 2>&1
 fi 
 
 # Config rsyslog 
 echo "Config rsyslog"
 mv /etc/rsyslog.{conf,conf.bk}
-curl -o /etc/rsyslog.conf https://raw.githubusercontent.com/nhanhoadocs/ghichep-cmdlog/master/config/"$OS_VER"_rsyslog.cnf > /dev/null 2>&1
+curl -o /etc/rsyslog.conf https://raw.githubusercontent.com/thang290298/CMD-Log/main/config/"$OS_VER"_rsyslog.cnf > /dev/null 2>&1
 systemctl restart rsyslog.service > /dev/null 2>&1 || service rsyslog restart > /dev/null 2>&1
 source ~/.bashrc
 
