@@ -160,6 +160,7 @@ echo "Config rsyslog"
 mv /etc/rsyslog.{conf,conf.bk}
 curl -o /etc/rsyslog.conf https://raw.githubusercontent.com/thang290298/CMD-Log/main/config/"$OS_VER"_rsyslog.cnf > /dev/null 2>&1
 systemctl restart rsyslog.service > /dev/null 2>&1 || service rsyslog restart > /dev/null 2>&1
+
 source ~/.bashrc
 
 echo "DONE - This task need be LOGOUT & LOGIN again to start logging cmd"
