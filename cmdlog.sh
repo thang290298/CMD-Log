@@ -62,8 +62,6 @@ elif cat /etc/*release | grep ^NAME | grep Rocky > /dev/null 2>&1; then
 
     if [ $(rpm --eval '%{rocky_ver}') == '8' ] ;then 
         OS_VER="Rocky8"
-    elif [ $(rpm --eval '%{rocky_ver}') == '9' ] ;then 
-        OS_VER="Rocky9"
     fi 
 else
     echo "Script doesn't support or verify this OS type/version"
@@ -87,8 +85,8 @@ elif [[ $OS == "Debian" ]]; then
 elif [[ $OS == "Rocky" ]]; then 
     if ! rpm -qa | grep rsyslog > /dev/null 2>&1; then
         yum -y install rsyslog 
+    fi
 fi
-
 # Check config cmdlog
 echo "Check old cmdlog config"
 if [[ -f "/var/log/cmdlog.log" ]]; then 
