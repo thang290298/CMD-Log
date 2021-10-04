@@ -62,6 +62,8 @@ elif cat /etc/*release | grep ^NAME | grep Rocky > /dev/null 2>&1; then
 
     if [ $(rpm --eval '%{rocky_ver}') == '8' ] ;then 
         OS_VER="Rocky8"
+    elif [ $(rpm --eval '%{rocky_ver}') == '9' ] ;then 
+        OS_VER="Rocky9"
     fi 
 else
     echo "Script doesn't support or verify this OS type/version"
