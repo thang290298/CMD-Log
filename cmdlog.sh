@@ -117,10 +117,6 @@ if [[ $OS == "CentOS" ]]; then
     echo "# Command log" >> /etc/skel/.bashrc
     echo "export PROMPT_COMMAND='RETRN_VAL=$?;logger -p local6.debug \"[\$(echo \$SSH_CLIENT | cut -d\" \" -f1)] # \$(history 1 | sed \"s/^[ ]*[0-9]\+[ ]*//\" )\"'" >> /etc/skel/.bashrc
     echo 'export HISTTIMEFORMAT="%d/%m/%y %T "' >> /etc/skel/.bashrc
-elif [[ $OS == "Rocky" ]]; then 
-    echo "# Command log" >> /etc/skel/.bashrc
-    echo "export PROMPT_COMMAND='RETRN_VAL=$?;logger -p local6.debug \"[\$(echo \$SSH_CLIENT | cut -d\" \" -f1)] # \$(history 1 | sed \"s/^[ ]*[0-9]\+[ ]*//\" )\"'" >> /etc/skel/.bashrc
-    echo 'export HISTTIMEFORMAT="%d/%m/%y %T "' >> /etc/skel/.bashrc
 elif [[ $OS == "Ubuntu" ]]; then 
     echo "# " >> ~/.bashrc
     echo "alias useradd='adduser'" >> ~/.bashrc
@@ -153,6 +149,10 @@ CREATE_MAIL_SPOOL=yes""" > /etc/default/useradd
     mkdir -p /etc/skel
     curl -o /etc/skel/.bashrc  https://raw.githubusercontent.com/thang290298/CMD-Log/main/config/"$OS".bashrc > /dev/null 2>&1
     curl -o /etc/skel/.profile  https://raw.githubusercontent.com/thang290298/CMD-Log/main/config/"$OS".profile > /dev/null 2>&1
+elif [[ $OS == "Rocky" ]]; then 
+    echo "# Command log" >> /etc/skel/.bashrc
+    echo "export PROMPT_COMMAND='RETRN_VAL=$?;logger -p local6.debug \"[\$(echo \$SSH_CLIENT | cut -d\" \" -f1)] # \$(history 1 | sed \"s/^[ ]*[0-9]\+[ ]*//\" )\"'" >> /etc/skel/.bashrc
+    echo 'export HISTTIMEFORMAT="%d/%m/%y %T "' >> /etc/skel/.bashrc
 fi 
 
 # Config rsyslog 
@@ -163,3 +163,4 @@ systemctl restart rsyslog.service > /dev/null 2>&1 || service rsyslog restart > 
 source ~/.bashrc
 
 echo "DONE - This task need be LOGOUT & LOGIN again to start logging cmd"
+exit
