@@ -111,7 +111,7 @@ else
 fi 
 
 
-# Config for user add 
+# Config for user add in
 echo "Config auto cmdlog for new useradd"
 if [[ $OS == "CentOS" ]]; then 
     echo "# Command log" >> /etc/skel/.bashrc
@@ -151,7 +151,7 @@ CREATE_MAIL_SPOOL=yes""" > /etc/default/useradd
     curl -o /etc/skel/.profile  https://raw.githubusercontent.com/thang290298/CMD-Log/main/config/"$OS".profile > /dev/null 2>&1
 elif [[ $OS == "Rocky" ]]; then 
     echo "# Command log" >> /etc/skel/.bashrc
-    echo "export PROMPT_COMMAND='RETRN_VAL=$?;logger -p local6.debug \"[\$(echo \$SSH_CLIENT | cut -d\" \" -f1)] # \$(history 1 | sed \"s/^[ ]*[0-9]\+[ ]*//\" )\"'" >> /etc/skel/.bashrc
+    echo "#export PROMPT_COMMAND='RETRN_VAL=$?;logger -p local6.debug \"[\$(echo \$SSH_CLIENT | cut -d\" \" -f1)] # \$(history 1 | sed \"s/^[ ]*[0-9]\+[ ]*//\" )\"'" >> /etc/skel/.bashrc
     echo 'export HISTTIMEFORMAT="%d/%m/%y %T "' >> /etc/skel/.bashrc
 fi 
 
