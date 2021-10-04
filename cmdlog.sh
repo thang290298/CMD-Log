@@ -56,6 +56,13 @@ elif cat /etc/*release | grep ^NAME | grep Debian > /dev/null 2>&1; then
     elif [ $(lsb_release -c | grep Codename | awk '{print $2}') == 'buster' ] ;then 
         OS_VER="Debian10"
     fi 
+elif cat /etc/*release | grep ^NAME | grep Rocky > /dev/null 2>&1; then
+
+    OS="Rocky"
+
+    if [ $(rpm --eval '%{rocky_ver}') == '8' ] ;then 
+        OS_VER="Rocky8"
+    fi 
 else
     echo "Script doesn't support or verify this OS type/version"
     exit 1;
@@ -65,7 +72,7 @@ fi
 echo "Check Rsyslog installed"
 if [[ $OS == "CentOS" ]]; then 
     if ! rpm -qa | grep rsyslog > /dev/null 2>&1; then
-        yum install -y install rsyslog 
+        yum -y install rsyslog 
     fi 
 elif [[ $OS == "Ubuntu" ]]; then 
     if ! dpkg --get-selections | grep rsyslog > /dev/null 2>&1; then
@@ -75,6 +82,9 @@ elif [[ $OS == "Debian" ]]; then
     if ! dpkg --get-selections | grep rsyslog > /dev/null 2>&1; then
         apt-get -y install rsyslog 
     fi 
+elif [[ $OS == "Rocky" ]]; then 
+    if ! rpm -qa | grep rsyslog > /dev/null 2>&1; then
+        yum -y install rsyslog 
 fi
 
 # Check config cmdlog
@@ -104,6 +114,10 @@ fi
 # Config for user add 
 echo "Config auto cmdlog for new useradd"
 if [[ $OS == "CentOS" ]]; then 
+    echo "# Command log" >> /etc/skel/.bashrc
+    echo "export PROMPT_COMMAND='RETRN_VAL=$?;logger -p local6.debug \"[\$(echo \$SSH_CLIENT | cut -d\" \" -f1)] # \$(history 1 | sed \"s/^[ ]*[0-9]\+[ ]*//\" )\"'" >> /etc/skel/.bashrc
+    echo 'export HISTTIMEFORMAT="%d/%m/%y %T "' >> /etc/skel/.bashrc
+elif [[ $OS == "Rocky" ]]; then 
     echo "# Command log" >> /etc/skel/.bashrc
     echo "export PROMPT_COMMAND='RETRN_VAL=$?;logger -p local6.debug \"[\$(echo \$SSH_CLIENT | cut -d\" \" -f1)] # \$(history 1 | sed \"s/^[ ]*[0-9]\+[ ]*//\" )\"'" >> /etc/skel/.bashrc
     echo 'export HISTTIMEFORMAT="%d/%m/%y %T "' >> /etc/skel/.bashrc
