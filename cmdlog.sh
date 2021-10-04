@@ -163,4 +163,3 @@ systemctl restart rsyslog.service > /dev/null 2>&1 || service rsyslog restart > 
 source ~/.bashrc
 
 echo "DONE - This task need be LOGOUT & LOGIN again to start logging cmd"
-exit
