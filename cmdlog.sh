@@ -1,7 +1,6 @@
 #!/bin/bash
-# CMD log version 2 2019-10-05
-# CanhDX NhanHoa Cloud Team 
-# canhdx@nhanhoa.com.vn && uncelvel@gmail.com
+# CMD log
+# thangnv@nhanhoa.com.vn
 
 # Variable
 set -e
@@ -63,6 +62,13 @@ elif cat /etc/*release | grep ^NAME | grep Rocky > /dev/null 2>&1; then
     if [ $(rpm --eval '%{rocky_ver}') == '8' ] ;then 
         OS_VER="Rocky8"
     fi 
+elif cat /etc/*release | grep ^NAME | grep AlmaLinux > /dev/null 2>&1; then
+
+    OS="AlmaLinux"
+
+    if [ $(rpm --eval '%{almalinux_ver}') == '8' ] ;then 
+        OS_VER="AlmaLinux8"
+    fi 
 else
     echo "Script doesn't support or verify this OS type/version"
     exit 1;
@@ -84,7 +90,11 @@ elif [[ $OS == "Debian" ]]; then
     fi 
 elif [[ $OS == "Rocky" ]]; then 
     if ! rpm -qa | grep rsyslog > /dev/null 2>&1; then
-        yum -y install rsyslog 
+        dnf -y install rsyslog 
+    fi
+elif [[ $OS == "AlmaLinux" ]]; then 
+    if ! rpm -qa | grep rsyslog > /dev/null 2>&1; then
+        dnf -y install rsyslog 
     fi
 fi
 # Check config cmdlog
@@ -150,6 +160,10 @@ CREATE_MAIL_SPOOL=yes""" > /etc/default/useradd
     curl -o /etc/skel/.bashrc  https://raw.githubusercontent.com/thang290298/CMD-Log/main/config/"$OS".bashrc > /dev/null 2>&1
     curl -o /etc/skel/.profile  https://raw.githubusercontent.com/thang290298/CMD-Log/main/config/"$OS".profile > /dev/null 2>&1
 elif [[ $OS == "Rocky" ]]; then 
+    echo "# Command log" >> /etc/skel/.bashrc
+    echo "#export PROMPT_COMMAND='RETRN_VAL=$?;logger -p local6.debug \"[\$(echo \$SSH_CLIENT | cut -d\" \" -f1)] # \$(history 1 | sed \"s/^[ ]*[0-9]\+[ ]*//\" )\"'" >> /etc/skel/.bashrc
+    echo 'export HISTTIMEFORMAT="%d/%m/%y %T "' >> /etc/skel/.bashrc
+elif [[ $OS == "AlmaLinux" ]]; then 
     echo "# Command log" >> /etc/skel/.bashrc
     echo "#export PROMPT_COMMAND='RETRN_VAL=$?;logger -p local6.debug \"[\$(echo \$SSH_CLIENT | cut -d\" \" -f1)] # \$(history 1 | sed \"s/^[ ]*[0-9]\+[ ]*//\" )\"'" >> /etc/skel/.bashrc
     echo 'export HISTTIMEFORMAT="%d/%m/%y %T "' >> /etc/skel/.bashrc
