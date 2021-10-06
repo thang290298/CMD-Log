@@ -90,11 +90,11 @@ elif [[ $OS == "Debian" ]]; then
     fi 
 elif [[ $OS == "Rocky" ]]; then 
     if ! rpm -qa | grep rsyslog > /dev/null 2>&1; then
-        dnf -y install rsyslog > /dev/null 2>&1
+        dnf -y install rsyslog
     fi
 elif [[ $OS == "AlmaLinux" ]]; then 
     if ! rpm -qa | grep rsyslog > /dev/null 2>&1; then
-        dnf -y install rsyslog > /dev/null 2>&1
+        dnf -y install rsyslog
     fi
 fi
 # Check config cmdlog
@@ -126,6 +126,14 @@ echo "Config auto cmdlog for new useradd"
 if [[ $OS == "CentOS" ]]; then 
     echo "# Command log" >> /etc/skel/.bashrc
     echo "export PROMPT_COMMAND='RETRN_VAL=$?;logger -p local6.debug \"[\$(echo \$SSH_CLIENT | cut -d\" \" -f1)] # \$(history 1 | sed \"s/^[ ]*[0-9]\+[ ]*//\" )\"'" >> /etc/skel/.bashrc
+    echo 'export HISTTIMEFORMAT="%d/%m/%y %T "' >> /etc/skel/.bashrc
+elif [[ $OS == "Rocky" ]]; then 
+    echo "# Command log" >> /etc/skel/.bashrc
+    echo "#export PROMPT_COMMAND='RETRN_VAL=$?;logger -p local6.debug \"[\$(echo \$SSH_CLIENT | cut -d\" \" -f1)] # \$(history 1 | sed \"s/^[ ]*[0-9]\+[ ]*//\" )\"'" >> /etc/skel/.bashrc
+    echo 'export HISTTIMEFORMAT="%d/%m/%y %T "' >> /etc/skel/.bashrc
+elif [[ $OS == "AlmaLinux" ]]; then 
+    echo "# Command log" >> /etc/skel/.bashrc
+    echo "#export PROMPT_COMMAND='RETRN_VAL=$?;logger -p local6.debug \"[\$(echo \$SSH_CLIENT | cut -d\" \" -f1)] # \$(history 1 | sed \"s/^[ ]*[0-9]\+[ ]*//\" )\"'" >> /etc/skel/.bashrc
     echo 'export HISTTIMEFORMAT="%d/%m/%y %T "' >> /etc/skel/.bashrc
 elif [[ $OS == "Ubuntu" ]]; then 
     echo "# " >> ~/.bashrc
@@ -159,14 +167,6 @@ CREATE_MAIL_SPOOL=yes""" > /etc/default/useradd
     mkdir -p /etc/skel
     curl -o /etc/skel/.bashrc  https://raw.githubusercontent.com/thang290298/CMD-Log/main/config/"$OS".bashrc > /dev/null 2>&1
     curl -o /etc/skel/.profile  https://raw.githubusercontent.com/thang290298/CMD-Log/main/config/"$OS".profile > /dev/null 2>&1
-elif [[ $OS == "Rocky" ]]; then 
-    echo "# Command log" >> /etc/skel/.bashrc
-    echo "#export PROMPT_COMMAND='RETRN_VAL=$?;logger -p local6.debug \"[\$(echo \$SSH_CLIENT | cut -d\" \" -f1)] # \$(history 1 | sed \"s/^[ ]*[0-9]\+[ ]*//\" )\"'" >> /etc/skel/.bashrc
-    echo 'export HISTTIMEFORMAT="%d/%m/%y %T "' >> /etc/skel/.bashrc
-elif [[ $OS == "AlmaLinux" ]]; then 
-    echo "# Command log" >> /etc/skel/.bashrc
-    echo "#export PROMPT_COMMAND='RETRN_VAL=$?;logger -p local6.debug \"[\$(echo \$SSH_CLIENT | cut -d\" \" -f1)] # \$(history 1 | sed \"s/^[ ]*[0-9]\+[ ]*//\" )\"'" >> /etc/skel/.bashrc
-    echo 'export HISTTIMEFORMAT="%d/%m/%y %T "' >> /etc/skel/.bashrc
 fi 
 
 # Config rsyslog 
