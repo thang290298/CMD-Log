@@ -90,11 +90,11 @@ elif [[ $OS == "Debian" ]]; then
     fi 
 elif [[ $OS == "Rocky" ]]; then 
     if ! rpm -qa | grep rsyslog > /dev/null 2>&1; then
-        dnf -y install rsyslog 
+        dnf -y install rsyslog > /dev/null 2>&1
     fi
 elif [[ $OS == "AlmaLinux" ]]; then 
     if ! rpm -qa | grep rsyslog > /dev/null 2>&1; then
-        dnf -y install rsyslog 
+        dnf -y install rsyslog > /dev/null 2>&1
     fi
 fi
 # Check config cmdlog
