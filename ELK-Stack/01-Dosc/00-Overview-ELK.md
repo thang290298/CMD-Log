@@ -37,6 +37,7 @@ V. [Vì sao nên sử dụng ELK Stack](#visao)
   - Elasticsearch: Cơ sở dữ liệu lưu trữ và query log
   - Logtash: Tiếp nhận log từ nhiều nguồn sau đó xử lý và ghi log vào Elasticsearch
   - Kibana: Giao diện hỗ trợ quản lý, thống kê log. Hỗ trợ đọc thông tin từ Elasticsearch
+  - Beats: Tập hợp các công cụ dùng để thu thập thông tin chuyên dụng. Có nhiệm vụ thu thập và vận chuyển dữ liệu từ client đến máy chủ ELK
 
 -  ELK có điểm mạnh là khả năng thu thập và hiển thị log theo thời gian thực. Có thể đáp ứng truy vấn đến một lượng dữ liệu cực lớn
 
@@ -58,8 +59,29 @@ V. [Vì sao nên sử dụng ELK Stack](#visao)
 - Khi làm việc với logstash thường sẽ phải làm việc với filter nhiều nhất. Filter sử dụng Grok để thực hiện phân tích dữ liệu 
 
 ### 3.2 Elasticsearch
-
+- ELK là một RESTful distributed search engine. Có thể hiểu là cung cấp khả năng tìm kiếm phân tán qua API. Sủ dụng kiểu lưu trữ dữ liệu noSQL( lưu trữ dữ liệu không cấu trúc)
+- Elasticsearch cho phép tìm kiếm theo nhiều loại hình thức khác nhau: theo cấu trúc, phi cấu trúc, gieo metric theo cách mong muốn
+- Elasticsearch rất nhanh, cho phép truy vấn lượng lớn dữ liệu tức thì với các dữ liệu đã thay đổi 
+- Có thể thiết lập cài đặt vận hành trên hàng petabyte dữ liệu.
+- Vận hành dễ dàng:
+  - Có khả năng co giãn và tính sẵn sàng cao
+  - Dự đoán trước, đáng tin cậy
+  - Đơn giản, trong suôt
+  - Elasticsearch sử dụng chuẩn RESTful APIs và JSON.B
 ## Phần IV. <a name="sudung"></a>Các trường hợp sử dụng ELK Stack
+
+- Đối với các hệ thống ứng dụng nhỏ, không cần dùng đến ELK mà sẽ sử dụng các thư viện ghi logs đi kèm ngôn ngữ rồi thực hiện ghi logs ra files và tiến hành đọc bình thường.
+- Ở trường hợp đối với công ty có các hệ thống lớn với nhiều người dùng, có nhiều dịch vụ hoạt động cùng lúc dẫn đến việc ghi logs ra files không còn hiệu quả nữa. Vì số lượng thiết bị lớn nên không thể truy cập vào từng thiết bị để đọc từng files log mà cập quản lý tập trung để quản lý logs.ELK sẽ hỗ trợ xử lý vấn để đó.
 ## Phần V. <a name="visao"></a>Vì sao nên sử dụng ELK Stack
 
- 
+ - Đọc log từ nhiều nguồn: Logstash có thể đọc được log từ rất nhiều nguồn, từ log file cho đến log database cho đến UDP hay REST request.
+ - Dễ tích hợp: Dù bạn có dùng Nginx hay Apache, dùng MSSQL, MongoDB hay Redis, Logstash đều có thể đọc hiểu và xử lý log của bạn nên việc tích hợp rất dễ dàng.
+ - Hoàn toàn free: Chỉ cần tải về, setup và dùng, không tốn một đồng nào cả. Công ty tạo ra ELK Stack kiếm tiền bằng các dịch vụ cloud hoặc các sản phẩm premium phụ thêm.
+ - Khả năng scale tốt: Logstash và Elasticsearch chạy trên nhiều node nên hệ thống ELK cực kì dễ scale. Khi có thêm service, thêm người dùng, muốn log nhiều hơn, bạn chỉ việc thêm node cho Logstash và Elasticsearch là xong.
+ - Search và filter mạnh mẽ: Elasticsearch cho phép lưu trữ thông tin kiểu NoSQL, hỗ trợ luôn Full-Text Search nên việc query rất dễ dàng và mạnh mẽ.
+ - Cộng đồng mạnh => tutorial nhiều => dễ dàng tiếp cận.
+
+
+## Phần VI. <a name="visao"></a>Tài liệu tham khảo
+- https://itnavi.com.vn/blog/elk-la-gi
+- https://blog.cloud365.vn/logging/ELK-part1-tong-quan-ve-elk-stack/
