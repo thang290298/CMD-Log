@@ -145,4 +145,39 @@ Thư viện của Elasticsearch hỗ trợ nhiều loại ngôn ngũ lập trìn
   - Chức năng chính của Cluster là quyết định xem shard nào được phân bổ cho node nào và khi nào thì di chuyển các Cluster để cần bằng lại Cluster.
 
 ### 2.3 <a name="Kibana"></a>Kibana
+**`Kibana ?`**
 
+- Kibana là công cụ trực quan hóa dữ liệu ELK Stack. Công cụ này được sử dụng để trực quan hóa các tài liệu Elasticsearch và giúp các nhà phát triển có cái nhìn sâu sắc về nó. 
+- Bảng điều khiển Kibana cung cấp các sơ đồ tương tác, dữ liệu không gian địa lý và đồ thị khác nhau để hình dung các quy tắc phức tạp.
+- Kibana có thể được sử dụng để tìm kiếm va tương tác với dữ liệu được lưu trữ bên trong Elasticsearch. Kibana hỗ trợ người dùng thực hiện phân tích dữ liệu nâng cao và hỗ trợ biểu thị dữ liệu thông qua bảng, biểu đồ hay là bản đồ
+
+- Kibana có nhiều phương pháp khác nhau để hỗ trợ tìm kiếm dữ liệu
+
+- Một số dạng tìm kiếm phổ biến:
+
+|Search Type| <h3 align="center"><b>Usage</h3>|
+|-----------|------|
+|Free text searches|Sử dụng tìm kiếm theo chuỗi ký tự|
+|Field-level searches| Có thể tìm kiếm chuỗi trong một trường dữ liệu cụ thể|
+|Logical statements|Được sử dụng để kết hợp các giá trị tìm kiếm nhằm tạo ra một câu lệnh tìm kiếm logic|
+|Proximity searches| Được sử dụng để tìm kiếm cụm từ trong các phạm vi cụ thể|
+
+**`Một số tính năng của Kibana`**
+- Bảng điều khiển mạnh mẽ, có khả năng hiển thị thông tin được thiết lập từ cụm elasticsearch cluter
+- Hỗ trợ tính năng theo dõi và tìm kiếm theo thời gian thực
+- Có thể thực hiện tìm kiếm, xem, tương tác với dữ liệu được lưu trữ bên trong Elasticsearch
+- Thực thi truy vấn dữ liệu và biểu thị trực quan hóa ở các dạng bảng, biểu đồ cũng như là bản đồ
+- Bảng điều khiển có thể cấu hình để cắt và chia các bản ghi logstash trong Elasticsearch
+- Có khả năng cung cấp dữ liệu lịch sử ở dạng đồ họa, biểu đồ,...
+- Dễ dàng cấu hình bảng điểu khiển hiển thị dữ liệu theo thời gian thực
+- Kibana ElasticSearch cho phép tìm kiếm dữ liệu theo thời gian thực
+
+**`Ưu và nhược điểm của Kibana`**
+
+- Dễ dàng hình dung
+- Tích hợp hoàn toàn với Elasticsearch
+- Công cụ trực quan hóa
+- Cung cấp khả năng phân tích, lập biểu đồ, tóm tắt và gỡ lỗi trong thời gian thực
+- Cung cấp giao diện bản năng và thân thiện với người dùng
+- Cho phép chia sẻ ảnh chụp nhanh của nhật ký được tìm kiếm qua
+- Cho phép lưu trang tổng quan và quản lý nhiều trang tổng quan
