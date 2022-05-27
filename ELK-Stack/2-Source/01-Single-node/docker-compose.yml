@@ -1,53 +1,79 @@
 version: '3.3'
+
 services:
-  Elasticsearch:
-    image: elasticsearch:${ELASTIC_VERSION}
+  elasticsearch:
+    build:
+      context: elasticsearch/
+      args:
+        ELK_VERSION: $ELK_VERSION
     container_name: elasticsearch
-    restart: always
     volumes:
-    - ./elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro,z
-    - elastic_data:/usr/share/elasticsearch/data/
+      - type: bind
+        source: ./elasticsearch/config/elasticsearch.yml
+        target: /usr/share/elasticsearch/config/elasticsearch.yml
+        read_only: true
+      - type: volume
+        source: elasticsearch
+        target: /usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+      - "9300:9300"
     environment:
       ES_JAVA_OPTS: "-Xmx256m -Xms256m"
-      ELASTIC_PASSWORD: ${ELASTIC_PASSWORD:-}
-      discovery.type: single-node    
-    ports:
-    - '9200:9200'
-    - '9300:9300'
+      ELASTIC_PASSWORD: password
+      # Use single node discovery in order to disable production mode and avoid bootstrap checks
+      # see https://www.elastic.co/guide/en/elasticsearch/reference/current/bootstrap-checks.html
+      discovery.type: single-node
     networks:
       - elk
 
-  Logstash:
-    image: logstash:${ELASTIC_VERSION}
+  logstash:
+    build:
+      context: logstash/
+      args:
+        ELK_VERSION: $ELK_VERSION
     container_name: logstash
-    restart: always
     volumes:
-    - ./logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml:ro,Z
-    depends_on:
-      - Elasticsearch
+      - type: bind
+        source: ./logstash/config/logstash.yml
+        target: /usr/share/logstash/config/logstash.yml
+        read_only: true
+      - type: bind
+        source: ./logstash/pipeline
+        target: /usr/share/logstash/pipeline
+        read_only: true
     ports:
-    - '9600:9600'
+      - "5000:5000/tcp"
+      - "5000:5000/udp"
+      - "9600:9600"
     environment:
-      LS_JAVA_OPTS: "-Xmx256m -Xms256m"    
+      LS_JAVA_OPTS: "-Xmx256m -Xms256m"
     networks:
       - elk
+    depends_on:
+      - elasticsearch
 
-  Kibana:
-    image: kibana:${ELASTIC_VERSION}
+  kibana:
+    build:
+      context: kibana/
+      args:
+        ELK_VERSION: $ELK_VERSION
     container_name: kibana
-    restart: always
     volumes:
-      - ./kibana/config/kibana.yml:/usr/share/kibana/config/kibana.yml:ro,Z           
+      - type: bind
+        source: ./kibana/config/kibana.yml
+        target: /usr/share/kibana/config/kibana.yml
+        read_only: true
     ports:
-    - '5601:5601'
-    environment:
-      - ELASTICSEARCH_URL=http://elasticsearch:9200  
-    depends_on:
-      - Elasticsearch  
+      - "5601:5601"
     networks:
       - elk
-volumes:
-  elastic_data: {}
+    depends_on:
+      - elasticsearch
 
 networks:
   elk:
+    driver: bridge
+
+volumes:
+  elasticsearch:
