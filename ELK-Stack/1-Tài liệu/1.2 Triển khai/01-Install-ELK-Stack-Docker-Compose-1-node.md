@@ -37,13 +37,41 @@ Mô hình triển khai bao gồm các thảnh phần:
 ```sh
 sudo apt-get update -y
 ```
-- Cài đặt Docker-compose
+- Cài đặt các gói ràng buộc
 ```sh
-sudo apt-get install docker-compose-plugin
+sudo apt-get install apt-transport-https ca-certificates curl software-properties-common
 ```
-- Kiểm tra version cài đặt:
+- Adding Docker’s GPG Key
+
 ```sh
-root@thangnv-elk-server:~# docker compose version
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+```
+
+- Cài đặt Docker
+```sh
+sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu  $(lsb_release -cs)  stable"
+sudo apt update
+sudo apt-get install docker-ce
+```
+- Kiểm tra version docker cài đặt:
+```sh
+docker --version
+kết quả:
+Docker version 20.10.16, build aa7e414
+```
+- kiểm tra version docker compose
+```sh
+$ apt-cache madison docker-compose-plugin
+docker-compose-plugin | 2.5.0~ubuntu-focal | https://download.docker.com/linux/ubuntu focal/stable amd64 Packages
+docker-compose-plugin | 2.3.3~ubuntu-focal | https://download.docker.com/linux/ubuntu focal/stable amd64 Packages
+```
+- cài đặt docker compose version 2.5.0
+```sh
+$ sudo apt-get install docker-compose-plugin=2.5.0~ubuntu-focal
+```
+- Kiểm tra phiên bản docker compose sau khi cài đặt
+```sh
+$  docker compose version
 Docker Compose version v2.5.0
 ```
 
@@ -114,8 +142,8 @@ xpack.monitoring.elasticsearch.hosts: [ "http://elasticsearch:9200" ]
 ## X-Pack security credentials
 #
 xpack.monitoring.enabled: true
-xpack.monitoring.elasticsearch.username: elastic
-xpack.monitoring.elasticsearch.password: password
+xpack.monitoring.elasticsearch.username: monitor_elastic
+xpack.monitoring.elasticsearch.password: Passwordelastic
 ```
 
 logstash.conf : File cấu hình gửi dữ liệu sau khi đã xử lý đến OUTPUT ( ở đây đang cấu hình gửi dữ liệu đến elasticsearch)
@@ -132,7 +160,7 @@ output {
         elasticsearch {
                 hosts => "elasticsearch:9200"
                 user => "elastic"
-                password => "password"
+                password => "Password2022"
         }
 }
 ```
@@ -251,3 +279,21 @@ networks:
 volumes:
   elasticsearch:
 ```
+
+- Sau khi hoàn thành khởi tạo các file config và setup, tiến hành triển khai docker-compose để cài đặt ELK Stack
+```sh
+$ docker compose up -d
+[+] Running 4/4
+ ⠿ Network elk_elk          Created                   0.3s
+ ⠿ Container elasticsearch  Started                   1.5s
+ ⠿ Container logstash       Started                   2.5s
+ ⠿ Container kibana         Started                   2.5s
+```
+- Sau khi Docker Compose hoàn thành cài đặt thì kiểm tra một số thành phần như sau:
+  - Kiểm tra trạng thái hoạt động của các Container
+  <h3 align="center"><img src="../../../ELK-Stack/03-Images/dosc/10.png"></h3>
+  
+  - kiểm tra trạng thái hoạt động của Elasticsearch trên trình duyệt thông qua Port 9200
+  <h3 align="center"><img src="../../../ELK-Stack/03-Images/dosc/11.png"></h3>
+  - kiểm tra trạng thái hoạt động của kibana trên trình duyệt thông qua Port 5601
+  <h3 align="center"><img src="../../../ELK-Stack/03-Images/dosc/12.png"></h3>
