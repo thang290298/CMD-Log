@@ -297,3 +297,93 @@ $ docker compose up -d
   <h3 align="center"><img src="../../../ELK-Stack/03-Images/dosc/11.png"></h3>
   - kiểm tra trạng thái hoạt động của kibana trên trình duyệt thông qua Port 5601
   <h3 align="center"><img src="../../../ELK-Stack/03-Images/dosc/12.png"></h3>
+
+## Phần III. <a name="installbeats"></a>Cài đặt Beats trên client
+- Thực hiện cài đặt `beats` vận chuyện log Filebeat trên các thiết bị linux bao gồm các phần:
+  - Thực hiện cài đặt Filebeat trên các thiết bị cần theo dõi
+  - Chỉ định vị trí của file log
+  - Phân tích và gửi dữ liệu log đến 
+
+### 1. Cài đặt
+- thực hiện tải và cài đặt filebeat version theo câu lệnh sau đây:
+```sh
+curl -L -O https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-7.16.2-x86_64.rpm
+sudo rpm -vi filebeat-7.16.2-x86_64.rpm
+```
+### 2. Cấu hình kết nối đến Logstash
+
+- Chỉnh sửa các nội dung trong file: `/etc/filebeat/filebeat.yml`
+  - Filebeat inputs
+  ```sh
+  - type: log
+  enabled: false   // thay đổi sang true để cho phép filebeat thu thập dữ liệu log
+  paths:    // đường dẫn các file log mà filebeat sẽ thực hiện thu thập và gửi đến Logstash để xử lý
+    - /var/log/*.log
+  ```
+  - Logstash Output : thực hiện bỏ # và điền thông tin kết nối đến Logstash
+  ```sh
+  - Trước:
+  #output.logstash:
+  # The Logstash hosts
+  #hosts: ["localhost:5044"]
+  - Sau:
+  output.logstash:
+  # The Logstash hosts
+  hosts: ["192.168.70.50:5000"]
+  
+- Cấu hình thu thập log
+  - list danh sách module đang được hỗ trợ
+  ```sh
+  [root@thangnv-client1 httpd]# filebeat modules list
+  Enabled: // module đã kích hoạt
+  apache
+  system
+  
+  Disabled: // list Modele được hỗ trợ
+  apache
+  auditd
+  elasticsearch
+  haproxy
+  icinga
+  iis
+  kafka
+  kibana
+  logstash
+  mongodb
+  mysql
+  nats
+  nginx
+  osquery
+  pensando
+  postgresql
+  redis
+  santa
+  system
+  traefik
+  [root@thangnv-client1 httpd]#
+  ```
+  - Thực hiện kích hoạt Module
+  ```sh
+  filebeat modules enable {Module}
+  - ví dụ:
+  filebeat modules enable apache
+  ```
+  - Chỉnh sửa nội dung file cấu hình Module có đường dẫn : `/etc/filebeat/modules.d`
+  ```sh
+  - module: apache  // Tên Modue
+  # Access logs
+  access:
+    enabled: true  // bật tính năng thu thập access log
+    var.paths: ["/var/log/httpd/access_log*"]  //Đường dẫn file log access
+
+  # Error logs
+  error:
+    enabled: true  // bật tính năng thu thập error log
+    var.paths: ["/var/log/httpd/error_log*"]  // Đường dẫn file log error
+  ```
+
+- Thực hiện thiết lập và chỉnh sửa các cấu hình vừa thay đổi
+```
+filebeat setup -e
+```
+trong đó: -e
