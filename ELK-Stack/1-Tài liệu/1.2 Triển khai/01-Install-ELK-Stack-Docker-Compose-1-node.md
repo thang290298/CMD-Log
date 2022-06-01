@@ -149,19 +149,22 @@ xpack.monitoring.elasticsearch.password: Passwordelastic
 logstash.conf : File cấu hình gửi dữ liệu sau khi đã xử lý đến OUTPUT ( ở đây đang cấu hình gửi dữ liệu đến elasticsearch)
 ```sh
 input {
-        tcp {
-                port => 5000
-        }
+  beats {
+    port => 5000
+  }
 }
 
 ## Add your filters / logstash plugins configuration here
 
 output {
         elasticsearch {
-                hosts => "elasticsearch:9200"
-                user => "elastic"
-                password => "Password2022"
+          hosts => "elasticsearch:9200"
+          user => "elastic"
+          password => "Password2022"
+          manage_template => false
+          index => "filebeat-%{syslog_hostname}-%{input.type}%{+YYYY.MM.dd}"
         }
+        stdout { codec => rubydebug }
 }
 ```
 
@@ -298,7 +301,7 @@ $ docker compose up -d
   - kiểm tra trạng thái hoạt động của kibana trên trình duyệt thông qua Port 5601
   <h3 align="center"><img src="../../../ELK-Stack/03-Images/dosc/12.png"></h3>
 
-## Phần III. <a name="installbeats"></a>Cài đặt Beats trên client
+## Phần III. <a name="installbeats"></a>Cài đặt Beats/filebeat trên client ( Centos)
 - Thực hiện cài đặt `beats` vận chuyện log Filebeat trên các thiết bị linux bao gồm các phần:
   - Thực hiện cài đặt Filebeat trên các thiết bị cần theo dõi
   - Chỉ định vị trí của file log
@@ -386,4 +389,24 @@ sudo rpm -vi filebeat-7.16.2-x86_64.rpm
 ```
 filebeat setup -e
 ```
-trong đó: -e
+trong đó: -e là tùy chọn hiển thị hiển thì lỗi setup ra màn hình thay vì hiển thị trong file cấu hình
+
+- Kích hoạt dịch vụ filebeat
+```sh
+systemctl enable filebeat
+systemctl start filebeat
+```
+
+## Phần IV. <a name="showlogkibana"></a>Cấu hình hiển thị Logs trên Kibana
+
+- Truy cập địa chỉ IP kibana theo IP của ELK, ví dụ: http://192.168.70.50:5601, chọn `Discover` trong `Index Management` của `Elasticsearch`. Ở đây bạn sẽ thấy các index có tiền tố là filebeat, chính là các index lưu dữ liệu log do Filebeat gửi đến Logstash và Logstash để chuyển lưu tại Elasticsearch.
+
+<h3 align="center"><img src="../../../ELK-Stack/03-Images/dosc/13.png"></h3>
+
+- Để truy vấn bằng Kibana ta sẽ tạo các Index patterns, đó là truy vấn thông tin các index có tiền tố là filebeat-, nhấn vào Index patterns của Kibana, bấm vào Create index pattern
+
+- Điền filebeat-* vào index pattern, rồi nhấn Next Step
+- Chọn @timestamp ở mục Time Filter field name, rồi nhấn Create Index Pattern
+- Cuối cùng, bấm vào Discover, để xem thông tin về các log. Mặc định đang liệt các log 15 phút cuối
+
+<h3 align="center"><img src="../../../ELK-Stack/03-Images/dosc/14.png"></h3>
