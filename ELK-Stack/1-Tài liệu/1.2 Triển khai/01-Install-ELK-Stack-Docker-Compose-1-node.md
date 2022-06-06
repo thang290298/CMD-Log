@@ -39,7 +39,7 @@ sudo apt-get update -y
 ```
 - Cài đặt các gói ràng buộc
 ```sh
-sudo apt-get install apt-transport-https ca-certificates curl software-properties-common
+sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common
 ```
 - Adding Docker’s GPG Key
 
@@ -51,7 +51,7 @@ curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
 ```sh
 sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu  $(lsb_release -cs)  stable"
 sudo apt update
-sudo apt-get install docker-ce
+sudo apt-get install docker-ce -y
 ```
 - Kiểm tra version docker cài đặt:
 ```sh
@@ -405,8 +405,8 @@ systemctl start filebeat
 
 - Để truy vấn bằng Kibana ta sẽ tạo các Index patterns, đó là truy vấn thông tin các index có tiền tố là filebeat-, nhấn vào Index patterns của Kibana, bấm vào Create index pattern
 
-- Điền filebeat-* vào index pattern, rồi nhấn Next Step
-- Chọn @timestamp ở mục Time Filter field name, rồi nhấn Create Index Pattern
-- Cuối cùng, bấm vào Discover, để xem thông tin về các log. Mặc định đang liệt các log 15 phút cuối
+- Điền `filebeat-*` vào `index pattern`, rồi nhấn Next Step
+- Chọn `@timestamp` ở mục Time Filter field name, rồi nhấn Create Index Pattern
+- Cuối cùng, bấm vào `Discover`, để xem thông tin về các `log`. Mặc định đang liệt các log 15 phút cuối
 
 <h3 align="center"><img src="../../../ELK-Stack/03-Images/dosc/14.png"></h3>
