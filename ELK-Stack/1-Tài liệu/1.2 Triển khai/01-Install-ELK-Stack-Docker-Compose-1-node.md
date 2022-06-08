@@ -140,12 +140,14 @@ $ docker compose up -d
   - kiểm tra trạng thái hoạt động của kibana trên trình duyệt thông qua Port 5601
   <h3 align="center"><img src="../../../ELK-Stack/03-Images/dosc/12.png"></h3>
 
-## Phần III. <a name="installbeats"></a>Cài đặt Beats/filebeat trên client ( Centos)
+## Phần III. <a name="installbeats"></a>Cài đặt Beats client gửi log về ELK Stack
+
+
 - Thực hiện cài đặt `beats` vận chuyện log Filebeat trên các thiết bị linux bao gồm các phần:
   - Thực hiện cài đặt Filebeat trên các thiết bị cần theo dõi
   - Chỉ định vị trí của file log
   - Phân tích và gửi dữ liệu log đến 
-
+### `Thực hiện cài đặt Beats/filebeat trên linux`
 ### 1. Cài đặt
 - thực hiện tải và cài đặt filebeat version theo câu lệnh sau đây:
 ```sh
@@ -244,10 +246,117 @@ trong đó: -e là tùy chọn hiển thị hiển thì lỗi setup ra màn hìn
 systemctl enable filebeat
 systemctl start filebeat
 ```
+### `Thực hiện cài đặt Beats/winlogbeat trên linux`
+### 1. Cài đặt Winlogbeat trên Windows 10
+**` Bước 1`**: Download Winlogbeat
+- Thực hiện tải bộ cài [tại đây](https://www.elastic.co/downloads/beats/winlogbeat)
+
+<h3 align="center"><img src="../../../ELK-Stack/03-Images/dosc/32.png"></h3>
+
+- Tiếp theo thực hiện giải nén bộ cài vào đường dẫn: `C:\Program Files` và thực hiện rename folder đã giải nén về tên: `Winlogbeat`
+
+**` Bước 2`**: Thực hiện cài đặt
+- Mở `Powershell` quyền Administrator -> truy cập vào đường dẫn có chứa bộ cài
+- Thực hiện lệnh cài đặt các service
+```sh
+PS C:\Users\Administrator> cd 'C:\Program Files\Winlogbeat'
+PS C:\Program Files\Winlogbeat> .\install-service-winlogbeat.ps1
+
+Security warning
+Run only scripts that you trust. While scripts from the internet can be useful,
+this script can potentially harm your computer. If you trust this script, use
+the Unblock-File cmdlet to allow the script to run without this warning message.
+Do you want to run C:\Program Files\Winlogbeat\install-service-winlogbeat.ps1?
+[D] Do not run  [R] Run once  [S] Suspend  [?] Help (default is "D"): R
+
+Status   Name               DisplayName
+------   ----               -----------
+Stopped  winlogbeat         winlogbeat
+```
+> Lưu ý: Trong trường hợp file scripts k có quyền thực thi đối với hệ thống, thực hiện chạy lệnh sau: `PowerShell.exe -ExecutionPolicy UnRestricted -File .\install-service-winlogbeat.ps1`
+
+
+**` Bước 3`**: Cấu hình
+- Cấu hình các trường dữ liệu log thu thập
+
+```sh
+winlogbeat.event_logs:                                  // List danh sách event logs sẽ thu thập
+  - name: Application                                   // Tên ứng dụng hoặc dịch vụ sẽ thu thập log
+    ignore_older: 24h                                   // Khoảng thời gian mà winlogbeat thu thập dữ liệu tính đến thời điểm hiện tại
+    level: critical, error, warning, info               // Các mức độ cảnh báo mà winlogbeat sẽ thu thập
+    
+  - name: System
+    ignore_older: 24h
+    level: critical, error, warning, info
+    
+  - name: Security
+    ignore_older: 24h
+    level: critical, error, warning, info
+    
+  - name: Microsoft-Windows-Windows Firewall With Advanced Security/Firewall
+    ignore_older: 24h
+    level: critical, error, warning, info
+```
+
+- Cấu hình kết nối và gửi log đến ELK Stack
+
+  - Thực hiện bỏ dấu # và thay đổi thông tin địa chỉ IP để có thể kết nối đến máy chủ mong muốn
+  ```sh
+  - Trước:
+  #output.logstash:
+    # The Logstash hosts
+    #hosts: ["localhost:5000"]
+  - Sau:
+  output.logstash:
+    # The Logstash hosts
+    hosts: ["192.168.70.50:5000"]
+  ```
+- Cấu hình cho phép winlogbeat thực hiện lưu log ra file lưu trữ trên thiêt bị local
+```sh
+logging.to_files: true
+logging.files:
+  path: C:\ProgramData\winlogbeat\Logs
+logging.level: info
+```
+- Sau khi hoàn thành cấu hình file: `winlogbeat.yml` thực hiện lưu và kiểm tra cấu hình đã đúng hay chưa.
+```sh
+PS C:\Program Files\Winlogbeat> .\winlogbeat.exe test config -c .\winlogbeat.yml -e
+```
+- Khi cấu hình đúng mà không có lỗi màn hình sẽ hiển thị: `Config OK`
+
+**` Bước 4`**: Cài đặt
+- Thực hiện chạy lệnh cài đặt:
+```sh
+.\winlogbeat.exe setup -e
+```
+- thực hiện khởi động và kiểm tra trạng thái winlogbeat:
+  - khởi động : `Start-Service winlogbeat`
+  - Kiểm tra :
+  <h3 align="center"><img src="../../../ELK-Stack/03-Images/dosc/33.png"></h3>
 
 ## Phần IV. <a name="showlogkibana"></a>Cấu hình hiển thị Logs trên Kibana
+### 1. Khởi các file pipeine config tiếp nhận dữ liệu chuyển về
+- Nội dung file có dạng như sau:
+ ```sh
+input {                               // Input tiếp nhận dữ lệu đầu vào
+    beats {
+      port => "5000"
+    }
+}
+filter {
+    ....                                // Xử lý dữ liệu mà input tiếp nhận
+}
+output {                                // Chuyển dữ liệu đến thiết bị lưu trữ
+    elasticsearch {
+      hosts => [ "elasticsearch:9200" ]
+      user => "elastic"
+      password => "Password2022"
+}
+ ```
 
-- Truy cập địa chỉ IP kibana theo IP của ELK, ví dụ: http://192.168.70.50:5601, chọn `Discover` trong `Index Management` của `Elasticsearch`. Ở đây bạn sẽ thấy các index có tiền tố là filebeat, chính là các index lưu dữ liệu log do Filebeat gửi đến Logstash và Logstash để chuyển lưu tại Elasticsearch.
+### 2. Cấu hình hiển thị và giám sát thông qua kibana
+
+- Truy cập địa chỉ IP kibana theo IP của ELK, ví dụ: http://192.168.70.50:5601, chọn `Discover` trong `Index Management` của `Elasticsearch`. Ở đây bạn sẽ thấy các index có tiền tố là filebeat, chính là các index lưu dữ liệu log do Filebeat gửi đến Logstash và Logstash chuyển đến lưu tại Elasticsearch.
 
 <h3 align="center"><img src="../../../ELK-Stack/03-Images/dosc/13.png"></h3>
 
@@ -258,3 +367,10 @@ systemctl start filebeat
 - Cuối cùng, bấm vào `Discover`, để xem thông tin về các `log`. Mặc định đang liệt các log 15 phút cuối
 
 <h3 align="center"><img src="../../../ELK-Stack/03-Images/dosc/14.png"></h3>
+
+
+> Khi không khởi tạo giá trị `index` trong phần output thì mặc định tiền tố các index data sẽ có các tiền tố là metadata của beats là filebeat hay winlogbeat tương ứng.
+
+- Thực hiện tương tự ta có kết quả đối với winlogbeat
+
+<h3 align="center"><img src="../../../ELK-Stack/03-Images/dosc/34.png"></h3>
