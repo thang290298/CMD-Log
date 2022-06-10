@@ -40,7 +40,7 @@ IV. [Một số thành phần cơ bản](#thanhphan)
 -  ELK có điểm mạnh là khả năng thu thập và hiển thị log theo thời gian thực. Có thể đáp ứng truy vấn đến một lượng dữ liệu cực lớn
 
 
-<h3 align="center"><img src="../../../ELK-Stack/03-Images/dosc/1.png"></h3>
+<h3 align="center"><img src="../../../../ELK-Stack/03-Images/dosc/1.png"></h3>
 
 
 ## Phần IV. <a name="thanhphan"></a>Một số thành phần cơ bản
@@ -64,7 +64,7 @@ IV. [Một số thành phần cơ bản](#thanhphan)
 
 - kibana được phát triển để sử dụng riêng cho ứng dụng ELK, sử dụng để thực hiện chuyển đổi truy vấn của người dùng thành các câu lệnh truy vấn mà khi đó Elassticsearch có thể thực hiện được. Sau khi truy vấn kết quả có thể hiển thị theo nhiều các và nhiều dạng biểu đồ khác nhau
 
-<h3 align="center"><img src="../../../ELK-Stack/03-Images/dosc/2.png"></h3>
+<h3 align="center"><img src="../../../../ELK-Stack/03-Images/dosc/2.png"></h3>
 
 
 
