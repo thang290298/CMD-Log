@@ -20,7 +20,7 @@ ELK Stack là tập hợp 3 phần mềm đi chung với nhau, phục vụ cho c
   - Kibana
 
 - Cơ chế hoạt động của ELK khá là đơn giản, mô tả ở hình sau:
-<h3 align="center"><img src="../../../ELK-Stack/03-Images/dosc/1.png"></h3>
+<h3 align="center"><img src="../../../../ELK-Stack/03-Images/dosc/1.png"></h3>
 - Phân tích cơ chế hoạt động:
 
   - Bước 1: logstash tiếp nhận dữ liệu log được đưa đến. Logstash có thể tiếp nhận logs dưới nhiều hình thức khác nhau, chẳng hạn như server gửi 1 UDP repuest chứa log đến URL logstash. Hoặc beats đọc files logs sau đó gửi đến cho logstash
@@ -37,16 +37,18 @@ Logstash là một chương trình mã nguồn mở, nằm trong hệ sinh thái
 - `OUTOUT`: Cuối cùng sau khi xử lý log sẽ được gửi đến Elasticsearch để tiếp nhận lưu trữ và hiển thị log
 
 ***`Luông xử lý dữ liệu logstash`***
-<h3 align="center"><img src="../../../ELK-Stack/03-Images/dosc/3.png"></h3>
+<h3 align="center"><img src="../../../../ELK-Stack/03-Images/dosc/3.png"></h3>
 
 - ở bước INPUT, Logstash được cấu hình để tiếp log evnet hoặc đi lấy dữ liệu log ở dịch remote theo nhu cầu. Sau khi lấy được log event thì bước INPUT sẽ ghi dữ liệu event xuống hàng đợi tập trung ở bộ nhớ ram hoặc trên ổ cứng
 - Mỗi pipeline worker thread sẽ tiếp tục lấy một loạt các sự kiện đang nằm trong hàng đợi để xử lý FILTER giúp tái cấu trúc dữ liệu log sẽ được gửi đi ở phần OUTPUT. Số lượng sự kiện được xử lý 1 loạt số lượng pipeline worker thread có thể được cấu hình tinh chỉnh tối ưu hơn
 - Mặc định Logstash sử dụng hàng đợi nằm trong bộ nhớ ram giữa các giai đoạn (input -> filer và filter -> output) để làm bộ đệm lưu trữ dữ liệu event trước khi xử lý
 - Trong một số trường hợp nếu mà dịch vụ logstash vì 1 lý do nào đó bị mà ngừng hoạt động sẽ dẫn đến dữ liệu về event đang nằm trong buffer sẽ biến mất
 
+
+> Lưu ý: Trong thư mục chứa nhiều file config thì logstash sẽ thực hiện đọc và xử lý một các tuần tự, cần chú ý cách đặt tên file để có vị trí xử lý một cách hơp. Nêu đặt ký tự đầu tiên là số để đánh dấu vị trí
 **`INPUT`**
 
-<h3 align="center"><img src="../../../ELK-Stack/03-Images/dosc/4.png"></h3>
+<h3 align="center"><img src="../../../../ELK-Stack/03-Images/dosc/4.png"></h3>
 
 Thực hiện sử dụng cấu hình block `INPUT` để có thể quy định cơ chế nhận/lấy log vào bên trong chương trình Logstash. Một số plugin input thường được sử dụng để nhận hoặc lấy log như sau:
   - file: đọc dữ liệu từ file trên hệ thống, tượng tự với lện `tail -f` trên UNIX
@@ -58,7 +60,7 @@ Logstassh hỗ trợ nhiều loại Plugin input khác nhau giúp người dùng
 
 **`Filter`**
 
-<h3 align="center"><img src="../../../ELK-Stack/03-Images/dosc/5.png"></h3>
+<h3 align="center"><img src="../../../../ELK-Stack/03-Images/dosc/5.png"></h3>
 
 Có thể kết hợp filter cùng với các điều kiện so sánh nhằm thực hiện 1 tác vụ khi một sự kiện thỏa mãn các tiêu chí do người quản trị đặt ra trước đó. Một số Plugin hữu ích thường được dùng như:
   - Grok: là plugin filter tốt nhất để phân tích cú pháp dữ liệu log không có cấu trúc thành dữ liệu có cấu trúc có thể thực hiện truy vấn được
@@ -71,7 +73,7 @@ Có thể kết hợp filter cùng với các điều kiện so sánh nhằm th�
 **`OUTPUTS`**
 
 
-<h3 align="center"><img src="../../../ELK-Stack/03-Images/dosc/6.png"></h3>
+<h3 align="center"><img src="../../../../ELK-Stack/03-Images/dosc/6.png"></h3>
 
 
 Outputs là bước cuối trong chuỗi xử lý dữ liệu log của logstsash. Một evnet log có thể được đưa ra nhiều output khác nhau. Một số Output plugin thường được sử dụng
@@ -120,7 +122,7 @@ Thư viện của Elasticsearch hỗ trợ nhiều loại ngôn ngũ lập trìn
   - Có 2 kiểu đánh index là forward index và inverted index. Bản chất của inverted index là đánh theo keyword: words -> pages còn forward đánh theo nội dung page -> words.
   - Việc đánh theo keyword giúp tìm kiếm sẽ nhanh hơn việc chúng ta phải tìm kiếm theo từng page. Elasticsearch sử dụng Apache lucence để quản lý và tạo inverted index.
 
-<h3 align="center"><img src="../../../ELK-Stack/03-Images/dosc/7.png"></h3>
+<h3 align="center"><img src="../../../../ELK-Stack/03-Images/dosc/7.png"></h3>
 
 - Shard:
   - Shard là tập hợp con của một Index. Một index có thể được lưu trên nhiều shard.

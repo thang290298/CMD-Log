@@ -40,7 +40,7 @@ IV. [Một số thành phần cơ bản](#thanhphan)
 -  ELK có điểm mạnh là khả năng thu thập và hiển thị log theo thời gian thực. Có thể đáp ứng truy vấn đến một lượng dữ liệu cực lớn
 
 
-<h3 align="center"><img src="../../../../ELK-Stack/03-Images/dosc/1.png"></h3>
+<h3 align="center"><img src="../../../../../ELK-Stack/03-Images/dosc/1.png"></h3>
 
 
 ## Phần IV. <a name="thanhphan"></a>Một số thành phần cơ bản
