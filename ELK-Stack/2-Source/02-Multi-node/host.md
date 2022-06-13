@@ -1,0 +1,7 @@
+127.0.0.1 localhost
+192.168.70.50 ELK-Master
+192.168.70.51 ELK-Data1
+192.168.70.52 ELK-Data2
+192.168.70.53 ELK-Ingest
+192.168.70.54 ELK-client
+192.168.70.55 ELK-remote
