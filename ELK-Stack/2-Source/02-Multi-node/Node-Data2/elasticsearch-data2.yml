@@ -2,19 +2,14 @@
 ## Default Elasticsearch configuration from Elasticsearch base image.
 ## https://github.com/elastic/elasticsearch/blob/master/distribution/docker/src/docker/config/elasticsearch.yml
 #
-cluster.name: ELK-Stack
-node.name: ELK-Data2
-node.roles: [data_warm, data_cold, data_frozen, master]
-network.host: 192.168.70.52
+cluster.name: cluster-elk
+node.name: elk-data2
+node.roles: [ data_warm, data_cold, master ]
+network.host: 192.168.70.53
 http.port: 9200
-discovery.seed_hosts: ["192.168.70.50", "192.168.70.51", "192.168.70.52"]
-cluster.initial_master_nodes: ["ELK-Master", "ELK-Data1", "ELK-Data2"]
+discovery.seed_hosts: ["192.168.70.51", "192.168.70.52", "192.168.70.53", "192.168.70.54", "192.168.70.55", "192.168.70.56", "192.168.70.57", "192.168.70.58" ]
+cluster.initial_master_nodes: ["elk-master", "elk-data1", "elk-data2"]
 discovery.zen.minimum_master_nodes: 2
-# Config Path Data
-path:
-  data: /var/data/elasticsearch
-  logs: /var/log/elasticsearch
-
 ## X-Pack settings
 ## see https://www.elastic.co/guide/en/elasticsearch/reference/current/setup-xpack.html
 #

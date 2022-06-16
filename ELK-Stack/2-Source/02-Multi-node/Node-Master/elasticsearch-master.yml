@@ -2,23 +2,19 @@
 ## Default Elasticsearch configuration from Elasticsearch base image.
 ## https://github.com/elastic/elasticsearch/blob/master/distribution/docker/src/docker/config/elasticsearch.yml
 #
-cluster.name: ELK-Stack
-node.name: ELK-Master
+cluster.name: cluster-elk
+node.name: elk-master
 node.roles: [master, voting_only]
-network.host: 192.168.70.50
+network.host: 192.168.70.51
 http.port: 9200
-discovery.seed_hosts: ["192.168.70.50", "192.168.70.51", "192.168.70.52"]
-cluster.initial_master_nodes: ["ELK-Master", "ELK-Data1", "ELK-Data2"]
+discovery.seed_hosts: ["elk-data1", "elk-data2", "elk-data3", "elk-ingest", "elk-cordinating", "elk-transform", "elk-machine-learning"]
+discovery.zen.ping.unicast.hosts: ["elk-master", "elk-data1", "elk-data2", "elk-data3", "elk-ingest", "elk-cordinating", "elk-transform", "elk-machine-learning"]
+cluster.initial_master_nodes: ["elk-master", "elk-data1", "elk-data2"]
 discovery.zen.minimum_master_nodes: 2
-# Config Path Data
-path:
-  data: /var/data/elasticsearch
-  logs: /var/log/elasticsearch
-
 ## X-Pack settings
 ## see https://www.elastic.co/guide/en/elasticsearch/reference/current/setup-xpack.html
 #
 # xpack.license.self_generated.type: trial
-xpack.security.enabled: true
+xpack.security.enabled: false
 xpack.monitoring.collection.enabled: true
 xpack.security.authc.api_key.enabled: true

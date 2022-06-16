@@ -3,7 +3,7 @@
 ## https://github.com/elastic/elasticsearch/blob/master/distribution/docker/src/docker/config/elasticsearch.yml
 #
 cluster.name: ELK-Stack
-node.name: ELK-Ingest
+node.name: ELK-Coordinating
 node.roles: [  ]
 network.host: 192.168.70.54
 http.port: 9200

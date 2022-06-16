@@ -1,7 +1,12 @@
-127.0.0.1 localhost
-192.168.70.50 ELK-Master
-192.168.70.51 ELK-Data1
-192.168.70.52 ELK-Data2
-192.168.70.53 ELK-Ingest
-192.168.70.54 ELK-client
-192.168.70.55 ELK-remote
+echo "# list node ELK
+192.168.70.51 elk-master
+192.168.70.52 elk-data1
+192.168.70.53 elk-data2
+192.168.70.54 elk-data3
+192.168.70.55 elk-ingest
+192.168.70.56 elk-cordinating
+192.168.70.57 elk-transform
+192.168.70.58 elk-machine-learning
+192.168.70.59 logstash
+192.168.70.60 kibana
+" >> /etc/hosts
