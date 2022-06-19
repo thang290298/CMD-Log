@@ -1,4 +1,4 @@
-<h1 align="center">Tài liệu xây dựng hệ thống ELK Stack </h1>
+<h1 align="center">Tài liệu xây dựng hệ thống ELK-Stack Cluster cơ bản </h1>
 
 # Phần I. Tổng quan
 ## 1. Mô hình hệ thống
@@ -17,7 +17,7 @@
 
 
 # Phần II. Triển khai cài đặt
-## 1. Cài đặt chug trên tất cả các node Elasticsearch
+## 1. Cài đặt chug trên tất cả các node ELK-Stack
 ### Thực hiện cài đặt Docker Compose
 - Thực hiện update OS:
 ```sh
@@ -96,9 +96,125 @@ echo "# list node ELK
 192.168.70.61 elk-remote
 " >> /etc/hosts
 ```
-
-### Mở Port firewalld
+## 2. Thực hiện trên các node Elasticsreach
+### **`2.1 Node Master`**
+### - Allow Port firewalld
 ```sh
 sudo ufw allow 9200
 sudo ufw allow 9300
 ```
+### - Tạo thư mục
+- Thư mục lưu trữ data
+```sh
+mkdir -p /elasticsearchdb-master
+```
+- Thư mục chứa các file cấu hình và setup cho node-master
+```sh
+mkdir -p /node-master
+cd /node-master
+```
+
+### - Tạo Certs certificate SSL sử trên tất cả các node
+Bước 1: 
+- Tạo file `.env` chưa thông tin về path, version, password,port dử dụng cho cài đặt
+  - Nội dung file :
+```sh
+# Phiên bản ELK Stack sử dụng để cài đặt
+ELK_VERSION=7.16.2
+# Đường dẫn lưu trữu chúng chỉ SSL sau khi khởi tạo
+CERTS_DIR=/usr/share/elasticsearch/config/certificates
+# Password user elastic sử dụng đăng nhập elasticsearch và kibana
+password_elasticsearch=Password2022
+```
+Bước 2:
+- Khởi tạo file `instances.yml` chứ thông tin tên và IP các node trong cum. 
+  - Nội dùng file:
+```sh
+instances:
+  - name: elk-luster
+    dns:
+	  - localhost
+      - elk-master
+	  - elk-data1
+	  - elk-data2
+	  - elk-data3
+	  - elk-ingest
+	  - elk-cordinating
+	  - elk-transform
+	  - elk-machine-learning
+   	  - elk-remote
+ 	  - logstash
+	  - kibana
+    ip:
+      - 127.0.0.1
+      - 192.168.70.51
+      - 192.168.70.52
+      - 192.168.70.53
+	  - 192.168.70.54
+	  - 192.168.70.55
+	  - 192.168.70.56
+  	  - 192.168.70.57
+	  - 192.168.70.58
+   	  - 192.168.70.59
+  	  - 192.168.70.60
+  	  - 192.168.70.61
+```
+Bước 3:
+- Chuẩn bị file docker-compose thực hiện khởi tạo Container phục vụ cho việc tại chứng chỉ SSL hoạt động trên các node
+  - Nội dung file `create-certs.yml`
+```sh
+version: '2.2'
+
+services:
+  create_certs:
+    container_name: create_certs
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ELK_VERSION}
+    command: >
+      bash -c '
+        if [[ ! -f /certs/bundle.zip ]]; then
+          bin/elasticsearch-certutil cert --silent --pem --in config/certificates/instances.yml -out /certs/bundle.zip;
+          unzip /certs/bundle.zip -d /certs;
+        fi;
+        chown -R 1000:0 /certs
+      '
+    user: "0"
+    working_dir: /usr/share/elasticsearch
+    volumes: ['certs:/certs', '.:${CERTS_DIR}']
+
+volumes: {"certs"}
+```
+Bước 4:
+- Thực hiện khởi tạo chứng chỉ SSL
+```sh
+docker-compose -f create-certs.yml run --rm create_certs
+```
+Kết quả:
+```sh
+Archive:  /certs/bundle.zip
+   creating: /certs/ca/
+  inflating: /certs/ca/ca.crt
+   creating: /certs/elk-luster/
+  inflating: /certs/elk-luster/elk-luster.crt
+  inflating: /certs/elk-luster/elk-luster.key
+```
+> Lưu ý: 
+>  - sau khi Chứng chỉ `SSL` khởi tạo công SSL thì Container create_certs sẽ bị xóa bởi option `--rm create_certs`
+>  - Chứng chỉ được lưu tại đường dẫn trên server: `/var/lib/docker/volumes/node-master-certs/_data/`
+
+### - Cài đặt Elasticsearch
+- Đứng tại thư mực `node-master` tạo file cấu hình và setup
+
+Bước 1: Tạo file setup `docker-compose.yml` 
+  - Nội dung file [tại đây]()
+> Lưu ý: do file `.env` đã tạo trong quá trình tạo SSL nên các biến trong file `docker-compose.yml` sẽ đọc giá trị từ file `.env` do cùng nằm trong 1 thư mục.
+
+Bước 2: Tạo file config `elasticsearch-master.yml` sử dụng cho elasticsearch
+  - Nội dung file [tại đây]()
+
+Bước 3: Thực hiện setup
+```sh
+docker compose up -d
+```
+Bước 4: kiểm tra kết quả:
+<h3 align="center"><img src="../../../ELK-Stack/03-Images/dosc/40.png"></h3>
+
