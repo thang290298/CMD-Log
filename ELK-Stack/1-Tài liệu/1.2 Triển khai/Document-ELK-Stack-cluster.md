@@ -2,11 +2,24 @@
 
 # Phần I. Tổng quan
 ## 1. Mô hình hệ thống
-## 2. Thành phần chức năng
+- Mô hình luồng xử lý dữ liệu
 
+
+<h3 align="center"><img src="../../../ELK-Stack/03-Images/dosc/41.png"></h3>
+
+
+- Mô hình triển khai
+<h3 align="center"><img src="../../../ELK-Stack/03-Images/dosc/42.png"></h3>
+
+
+## 2. Thành phần chức năng
+- Node 1:
+  - Hosname: elk-master01
+  - Cấu hình: 4CPU, 6GB Ram
+  - IP: 192.168.70.51 (IP Public), 10.10.10.21 (IP Private), 127.0.0.1 (IP local)
 | <p align="center">Node</p> | <p align="center">Host name</p> | <p align="center">role</p> | <p align="center">Cấu hình</p> | <p align="center">Vai trò</p> |
 |------|-----------|------|----------|-----------|
-| Master | ELK-Master | <ul><li>master</li><li>voting_only</li></ul> | <ul><li></li></ul> | <ul><li>Có trách nhiệm quản lý, tạo, sửa, xóa index, tái sắp xếp shard, thêm hoặc xóa 1 node ra khỏi cụm cluster</li><li>Chỉ định nút có đủ điều kiệu lên làm master trong cụm cluster đã được khai báo </li></ul> |
+| Master-01 | ELK-Master | <ul><li>master</li><li>voting_only</li></ul> | <ul><li></li></ul> | <ul><li>Có trách nhiệm quản lý, tạo, sửa, xóa index, tái sắp xếp shard, thêm hoặc xóa 1 node ra khỏi cụm cluster</li><li>Chỉ định nút có đủ điều kiệu lên làm master trong cụm cluster đã được khai báo </li></ul> |
 | Data1 | ELK-Data1 | <ul><li>data_hot</li><li>data_content<li>master</li></ul> | <ul><li></li></ul> | <ul><li>Sử dụng để lưu trữ dữ liệu vửa được đẩy vào từ logstash và có lượng tìm kiếm lớn</li><li>Sử dụng backup dự phòng cho node master </li></ul> ||  |
 | Data2 | ELK-Data2 | <ul><li>data_warm</li><li>data_cold</li><li>data_frozen<li>master</li></ul>| <ul><li> </li></ul> | <ul><li>Lưu trữ dữ liệu ít được tìm kiếm</li><li>Sử dụng backup dự phòng cho node master </li></ul> |
 | Ingest | ELK-Ingest | <ul><li>Ingest</li></ul> | <ul><li></li></ul> | <ul><li> Xử lý dữ documents trước khi quán trình index bắt đầu  </li></ul> |
