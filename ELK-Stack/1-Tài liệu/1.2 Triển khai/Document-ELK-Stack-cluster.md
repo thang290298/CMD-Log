@@ -2,38 +2,111 @@
 
 # Phần I. Tổng quan
 ## 1. Mô hình hệ thống
-- Mô hình luồng xử lý dữ liệu
+### -  Mô hình luồng xử lý dữ liệu
 
 
-<h3 align="center"><img src="../../../ELK-Stack/03-Images/dosc/44.png"></h3>
+<h3 align="center"><img src="../../../ELK-Stack/03-Images/dosc/46.png"></h3>
+
+- Mội thành phần xử lý dữ liệu hay điều hướng các request đều được hoạt động dưới hình thức HA nhằm mục đích đảm bảo tính ổn định, tăng hiệu năng xử lý của hệ thống.
+
+- Để có thể kết nối đến các thành phần trong một cụm sẽ sử dụng IP VIP để thực hiện kết nối và chia tải hệ thống
 
 
-- Mô hình triển khai
-<h3 align="center"><img src="../../../ELK-Stack/03-Images/dosc/45.png"></h3>
+### -  Mô hình triển khai thiết bị vật lý
+<h3 align="center"><img src="../../../ELK-Stack/03-Images/dosc/47.png"></h3>
 
 - Đối với mô hình nêu trên cần đến 7 server sử dụng docker để thực hiện cài đặt cụm ELK cluster, Túy thuộc vào tài nguyên hệ thống mà có thể đặt các role hoặc tăng giảm số container  cho các node thuộc Cluster nhằm mục đích giảm thiếu hoặc tăng số lượng server:
-- Quý tắc đăt roles cho cụm:
-  - Tối thiểu 1 cụm cần có 3 thành phần: Master, Data, client
-  -  Node master: Có trách nhiệm quản lý, tạo, sửa, xóa index, tái sắp xếp shard, thêm hoặc xóa 1 node ra khỏi cụm cluster. Thường được đặt các roles: master, voting_only
-  - Node data: Chỉ có trách nhiệm lưu trữ dữ liệu được gửi về. Thường được đặt các roles liên quan đến data
-  - Node Client: Có nhiệm xử lý dữ liệu, tiến trình hay chuyển đổi dữ liệu elasticseach hay API
-  - Dữ liệu chỉ được phép lưu trữ trên các node data
+- Quý tắc đăt roles cho cụm `Elastcisearch`:
+  - Tối thiểu 1 cụm cần có các thành phần: Master, Data, ingest, coordinating
+  - Cần thực hiện chạy Cluster đối với các role
+  - Trên một server vật lý cài đặt Elasticsearch có thể thực hiện đặt nhiều role khác nhau dẫn điến một cụm ELK-cluster có thể có số server chẵn nhưng số lượng server sử dụng cho 1 role luôn lẻ nhằm thỏa mãn công thức về số node hoạt động là (N/2)+1
+
+- VLan:
+  - Pubic 192.168.70..x/24: Sử dụng để management các server, tiếp nhận dữ liệu đẩy vào và đua dữ liệu ra bên ngoài thông qua kibana đến với người dùng
+  - Prvate 10.10.10.x/24: Sủ dụng để các node trong hệ thống thưc hiện giao tiếp và xử lý dữ liệu 
 
 ## 2. Thành phần chức năng các node có trong mô hình
-- Node 1:
-  - Hosname: elk-master01
-  - 
-| <p align="center">Node</p> | <p align="center">Host name</p> | <p align="center">role</p> | <p align="center">Cấu hình</p> | <p align="center">Vai trò</p> |
-|------|-----------|------|----------|-----------|
-| Master-01 | ELK-Master | <ul><li>master</li><li>voting_only</li></ul> | <ul><li></li></ul> | <ul><li>Có trách nhiệm quản lý, tạo, sửa, xóa index, tái sắp xếp shard, thêm hoặc xóa 1 node ra khỏi cụm cluster</li><li>Chỉ định nút có đủ điều kiệu lên làm master trong cụm cluster đã được khai báo </li></ul> |
-| Data1 | ELK-Data1 | <ul><li>data_hot</li><li>data_content<li>master</li></ul> | <ul><li></li></ul> | <ul><li>Sử dụng để lưu trữ dữ liệu vửa được đẩy vào từ logstash và có lượng tìm kiếm lớn</li><li>Sử dụng backup dự phòng cho node master </li></ul> ||  |
-| Data2 | ELK-Data2 | <ul><li>data_warm</li><li>data_cold</li><li>data_frozen<li>master</li></ul>| <ul><li> </li></ul> | <ul><li>Lưu trữ dữ liệu ít được tìm kiếm</li><li>Sử dụng backup dự phòng cho node master </li></ul> |
-| Ingest | ELK-Ingest | <ul><li>Ingest</li></ul> | <ul><li></li></ul> | <ul><li> Xử lý dữ documents trước khi quán trình index bắt đầu  </li></ul> |
-| Coordinating | ELK-Coordinating | <ul><li>[ ]</li></ul> | <ul><li></li></ul> | <ul><li>Có trach nhiệm điều phối, xử lý các request</li></ul> |
-| Transform | ELK-Transform  | <ul><li>transform</li><li>remote_cluster_client</li></ul> | <ul><li></li></ul> | <ul><li>thực hiện chuyển đổi các chỉ số Elasticsearch và các chỉ số API </li></ul> |
-| Machine-learning | ELK-Machine-learning | <ul><li>ml</li><li>remote_cluster_client</li></ul>| <ul><li></li></ul> | <ul><li>Xử lý các tiến trình API requests</li></ul>|
 
+### `Node ELK-Master`
+- Hosname: elk-master
+- IP Public: 192.168.70.50/24
+- IP Private: 10.10.10.10/24
+- Container: Elasticsearch
+- Role: master, ml, transform
+- Chức năng: Xủ lý, sửa , xóa các index. Add thêm hoặc xóa node trong cụm, thực hiện tìm kiếm và chuyển đổi các API gửi đến hệ thống
+ - Tại một thời điểm chỉ có một node master hoạt động
 
+### `Node ELK-data1`
+- Hosname: elk-data1
+- IP Public: 192.168.70.51/24
+- IP Private: 10.10.10.11/24
+- Container: Elasticsearch
+- Role: data, master, ingest
+- Chức năng: Xử lý dữ liệu index trước khi lưu trữ , lưu trữ dữ liệu, thực hiện backup roles master để khi cần thiết có thể đứng lên làm master
+
+### `Node ELK-data2`
+- Hosname: elk-data2
+- IP Public: 192.168.70.52/24
+- IP Private: 10.10.10.12/24
+- Container: Elasticsearch
+- Role: data, master, ingest, voting_only
+- Chức năng: Xử lý dữ liệu index trước khi lưu trữ , lưu trữ dữ liệu, thực hiện backup roles master để khi cần thiết có thể đứng lên làm master, khả năng đúng tổ chức bình chọn node master khi node master hiện tại gặp sự cố không hoạt động
+
+### `Node ELK-data3`
+- Hosname: elk-data3
+- IP Public: 192.168.70.53/24
+- IP Private: 10.10.10.13/24
+- Container: Elasticsearch
+- Role: data, ingest,
+- Chức năng: Xử lý dữ liệu index trước khi lưu trữ , lưu trữ dữ liệu
+
+### `Node ELK-service01`
+- Hosname: elk-data3
+- IP Public: 192.168.70.54/24
+- IP Private: 10.10.10.14/24
+- Container1: Elasticsearch
+  - Role: coordinating
+  - Chức năng: chuyển tiếp các yêu cầu về cụm đến node master và các yêu cầu về data đến các node data
+- Container2: kibana
+  - Chức năng: Hiển thị dữ liệu logs dưới dạng biểu đồ trực quan đến người dùng
+- Container3: logstash
+  - Chức năng: Phân tích, xử lý và viết lại dữ liệu logs đẩy về hệ thống sau đó chuyển tiếp vào lưu trữ tại các cụm Elasticsearch cluster
+- Container4: Keepalive-haproxy
+  - Thực hiện cấu hình khởi tạo IP VIP cho cụm
+  - IP VIP Public: 192.168.70.63/24 - Master
+  - IP VIP local: 10.10.10.20/24 - Backup
+
+### `Node ELK-service02`
+- Hosname: elk-data3
+- IP Public: 192.168.70.55/24
+- IP Private: 10.10.10.15/24
+- Container1: Elasticsearch
+  - Role: coordinating
+  - Chức năng: chuyển tiếp các yêu cầu về cụm đến node master và các yêu cầu về data đến các node data
+- Container2: kibana
+  - Chức năng: Hiển thị dữ liệu logs dưới dạng biểu đồ trực quan đến người dùng
+- Container3: logstash
+  - Chức năng: Phân tích, xử lý và viết lại dữ liệu logs đẩy về hệ thống sau đó chuyển tiếp vào lưu trữ tại các cụm Elasticsearch cluster
+- Container4: Keepalive-haproxy
+  - Thực hiện cấu hình khởi tạo IP VIP cho cụm
+  - IP VIP Public: 192.168.70.63/24 - Backup
+  - IP VIP local: 10.10.10.20/24 - Master
+
+### `Node ELK-service03`
+- Hosname: elk-data3
+- IP Public: 192.168.70.55/24
+- IP Private: 10.10.10.15/24
+- Container1: Elasticsearch
+  - Role: coordinating
+  - Chức năng: chuyển tiếp các yêu cầu về cụm đến node master và các yêu cầu về data đến các node data
+- Container2: kibana
+  - Chức năng: Hiển thị dữ liệu logs dưới dạng biểu đồ trực quan đến người dùng
+- Container3: logstash
+  - Chức năng: Phân tích, xử lý và viết lại dữ liệu logs đẩy về hệ thống sau đó chuyển tiếp vào lưu trữ tại các cụm Elasticsearch cluster
+- Container4: Keepalive-haproxy
+  - Thực hiện cấu hình khởi tạo IP VIP cho cụm
+  - IP VIP Public: 192.168.70.63/24 - Backup
+  - IP VIP local: 10.10.10.20/24 - Backup
 
 # Phần II. Triển khai cài đặt
 ### Thực hiện cài đặt Docker Compose trên tất cả node thuộc hệ thống
@@ -137,9 +210,9 @@ chown -R 1000:1000 /elk-masterdb/logs/
 ```sh
 mkdir -p /elk-cluster-setup && cd /elk-cluster-setup
 ```
-- Tạo file config `elasticsearch-elk-master.yml` sử dụng cho elasticsearch nội dung [tại đây]()
+- Tạo file config `elasticsearch-elk-master.yml` sử dụng cho elasticsearch nội dung [tại đây](https://github.com/thang290298/Ghi-chep-Logs/blob/main/ELK-Stack/2-Source/02-Multi-node/elk-master/elasticsearch-elk-master.yml)
 
-- Tạo file setup `docker-compose.yml` nội dung [tại đây]()
+- Tạo file setup `docker-compose.yml` nội dung [tại đây](https://github.com/thang290298/Ghi-chep-Logs/blob/main/ELK-Stack/2-Source/02-Multi-node/elk-master/docker-compose.yml)
 
 ### Bước 3: Setup và kiểm tra
 
@@ -169,9 +242,9 @@ chown -R 1000:1000 /elk-data01/logs/
 ```sh
 mkdir -p /elk-cluster-setup && cd /elk-cluster-setup
 ```
-- Tạo file config `elasticsearch-elk-data01.yml` sử dụng cho elasticsearch nội dung [tại đây]()
+- Tạo file config `elasticsearch-elk-data01.yml` sử dụng cho elasticsearch nội dung [tại đây](https://github.com/thang290298/Ghi-chep-Logs/blob/main/ELK-Stack/2-Source/02-Multi-node/elk-data01/elasticsearch-elk-data01.yml)
 
-- Tạo file setup `docker-compose.yml` nội dung [tại đây]()
+- Tạo file setup `docker-compose.yml` nội dung [tại đây](https://github.com/thang290298/Ghi-chep-Logs/blob/main/ELK-Stack/2-Source/02-Multi-node/elk-data01/docker-compose.yml)
 
 ### Bước 3: Setup và kiểm tra
 
@@ -199,9 +272,9 @@ chown -R 1000:1000 /elk-data02/logs/
 ```sh
 mkdir -p /elk-cluster-setup && cd /elk-cluster-setup
 ```
-- Tạo file config `elasticsearch-elk-data02.yml` sử dụng cho elasticsearch nội dung [tại đây]()
+- Tạo file config `elasticsearch-elk-data02.yml` sử dụng cho elasticsearch nội dung [tại đây](https://github.com/thang290298/Ghi-chep-Logs/blob/main/ELK-Stack/2-Source/02-Multi-node/elk-data02/elasticsearch-elk-data02.yml)
 
-- Tạo file setup `docker-compose.yml` nội dung [tại đây]()
+- Tạo file setup `docker-compose.yml` nội dung [tại đây](https://github.com/thang290298/Ghi-chep-Logs/blob/main/ELK-Stack/2-Source/02-Multi-node/elk-data02/docker-compose.yml)
 
 ### Bước 3: Setup và kiểm tra
 
@@ -227,9 +300,9 @@ chown -R 1000:1000 /elk-data03/logs/
 ```sh
 mkdir -p /elk-cluster-setup && cd /elk-cluster-setup
 ```
-- Tạo file config `elasticsearch-elk-data03.yml` sử dụng cho elasticsearch nội dung [tại đây]()
+- Tạo file config `elasticsearch-elk-data03.yml` sử dụng cho elasticsearch nội dung [tại đây](https://github.com/thang290298/Ghi-chep-Logs/blob/main/ELK-Stack/2-Source/02-Multi-node/elk-data03/elasticsearch-elk-data03.yml)
 
-- Tạo file setup `docker-compose.yml` nội dung [tại đây]()
+- Tạo file setup `docker-compose.yml` nội dung [tại đây](https://github.com/thang290298/Ghi-chep-Logs/blob/main/ELK-Stack/2-Source/02-Multi-node/elk-data03/docker-compose.yml)
 
 ### Bước 3: Setup và kiểm tra
 
@@ -258,12 +331,12 @@ chown -R 1000:1000 /elk-coordinating01/logs/
 mkdir -p /elk-cluster-setup && cd /elk-cluster-setup
 ```
 **`elk-coordinating01`**
-- Tạo file config `elasticsearch-elk-coordinating01.yml` sử dụng cho elasticsearch nội dung [tại đây]()
+- Tạo file config `elasticsearch-elk-coordinating01.yml` sử dụng cho elasticsearch nội dung [tại đây](https://github.com/thang290298/Ghi-chep-Logs/blob/main/ELK-Stack/2-Source/02-Multi-node/elk-service01/elasticsearch-elk-Cordingnating01.yml)
 
 **`elk-kibana01`**
 
 - Tạo file config `elk-kibana01.yml`. Kibana sẽ trỏ vào Cụm Elasticsearch để đọc dữ liệu thông qua IP VIP được cấu hình để chạy HA cho 3 node `coordinating`
-  - Nội dung file config [tại đây]()
+  - Nội dung file config [tại đây](https://github.com/thang290298/Ghi-chep-Logs/blob/main/ELK-Stack/2-Source/02-Multi-node/elk-service01/elk-kibana01.yml)
 
 **`elk-logstash01`**
 - Tạo thư mục lưu trữ file config và file pipeline xử lý dữ liệu logs đẩy về
@@ -284,101 +357,8 @@ http.host: "0.0.0.0"
 path.config: /usr/share/logstash/pipeline
 ```
 
-- Tạo file pipeline trỏ vào server `redis-cache` để lấy dữ liệu và sau khi xử lý dữ liệu sẽ trả dữ liệu về cụm `Elasticsearch` 
+- Tạo file pipeline nhận dự liệu được gửi đến thông qua port 5000 và sau khi xử lý dữ liệu sẽ trả dữ liệu về cụm `Elasticsearch` 
 
-- Nội dung file [tại đây]()
-
-> Lưu ý: Pipeline sử dụng `IP-VIP` để trỏ đến các cụm redis và elasticsearch
-
-
-**`keepalived-haproxy01`**
-
-- Container này sử dụng để khởi tạo IP VIP và xử lý HA cho các hệ thống Redis-cache cũng như ELk-CLuster
-- Tạo thư mục lưu trữ file cấu hình `keepalived.conf` và `haproxy.cfg`, nội dung file config [tại đây]()
-```sh
-mkdir -p keepalived-haproxy/ keepalived-haproxy/keepalived keepalived-haproxy/haproxy
-```
-
-
-### Bước 3: Mở port firewall
-
-```sh
-sudo ufw allow 9200 
-sudo ufw allow 9300
-sudo ufw allow 9201  
-sudo ufw allow 6370  
-sudo ufw allow 8080  
-sudo ufw allow 5001  
-```
-
-
-### Bước 3: Setup và kiểm tra
-
-- chạy lệnh setup
-```sh
-docker compose up -d
-```
-Bước 4: kiểm tra kết quả:
-
-```sh
-root@elk-service01:/elk-cluster-setup# docker ps -a
-CONTAINER ID   IMAGE                                                  COMMAND                  CREATED              STATUS              PORTS     NAMES
-ac233b60b956   docker.elastic.co/kibana/kibana:7.16.2                 "/bin/tini -- /usr/l…"   About a minute ago   Up About a minute             elk-kibana01
-3a6ca578d0c4   docker.elastic.co/elasticsearch/elasticsearch:7.16.2   "/bin/tini -- /usr/l…"   About a minute ago   Up About a minute             elk-coordinating01
-86871b607c91   pelin/haproxy-keepalived:v1.0.0                        "/haproxy-keepalived"    About a minute ago   Up About a minute             keepalived-haproxy01
-82b1923282aa   docker.elastic.co/logstash/logstash:7.16.2             "/usr/local/bin/dock…"   About a minute ago   Up About a minute             elk-logstash01
-root@elk-service01:/elk-cluster-setup#
-```
-### **`2.5 Node elk-service02`**
-
-- Thực hiện tương tự node `elk-service01` và cần thay đổi các trường thông tin sau:
-  - Tên các container hoạt động trên docker
-  - thay đổi địa chỉ IP của container đó trong các file cấu hình .yml
-  - thay đổi mode master và backup trong file cấu hình IP VIP
-
-- Nội dung file setup và config đặt [tại đây]()
-
-### **`2.6 Node elk-service03`**
-
-- Các thao tác thực hiện tương tự node `elk-service02`
-
-- Nội dung file setup và config đặt [tại đây]()
-
-
-### **`2.7 redis-cluster01`**
-
-### Bước 1: Tạo thư mục lưu trữ dữ liệu
-- Tạo thư mục lưu trữ dữ liệu và file cấu hình
-```sh
-mkdir -p /redis-cache01/ /redis-cache01/data /redis-cache01/conf
-sudo chown -R 1001:1001 /redis-cache01
-```
-
-### Bước 2: Tạo thư mục cài đặt
-- tạo và truy cập thư mục setup
-```sh
-mkdir -p /elk-cluster-setup && cd /elk-cluster-setup
-```
-- Tạo file config redis cluster
-```sh
-#vi redis.conf
-- nội dung:
-port 6379
-protected-mode no
-daemonize no
-appendonly yes
-cluster-enabled yes
-cluster-config-file nodes.conf
-cluster-node-timeout 5000
-cluster-announce-ip 10.10.10.17  //IP node 
-cluster-announce-port 6379
-cluster-announce-bus-port 16379
-```
-- Tạo đường dẫn chưa các file pipeline cho logstash
-```sh
-mkdir -p logtash/pipeline
-```
-- Tạo  1 file pipeline `01-bests.conf` để xử lý dữ liệu có nội dung sau:
 ```sh
 input {
   beats {
@@ -413,49 +393,59 @@ output {
 }
 ```
 
-- Tạo file setup `docker-compose.yml` nội dung [tại đây]()
+> Lưu ý: Pipeline sử dụng `IP-VIP` để trỏ đến các cụm redis và elasticsearch
 
+
+**`keepalived-haproxy01`**
+
+- Container này sử dụng để khởi tạo IP VIP và xử lý HA cho các hệ thống Redis-cache cũng như ELk-CLuster
+- Tạo thư mục lưu trữ file cấu hình `keepalived.conf` và `haproxy.cfg`, nội dung file config [tại đây](https://github.com/thang290298/Ghi-chep-Logs/tree/main/ELK-Stack/2-Source/02-Multi-node/elk-service01/keepalived-haproxy)
+```sh
+mkdir -p keepalived-haproxy/ keepalived-haproxy/keepalived keepalived-haproxy/haproxy
+```
+
+
+### Bước 3: Mở port firewall
+
+```sh
+sudo ufw allow 9200 
+sudo ufw allow 9300
+sudo ufw allow 9201  
+sudo ufw allow 8080  
+sudo ufw allow 5001  
+```
+
+
+### Bước 3: Setup và kiểm tra
 
 - chạy lệnh setup
 ```sh
 docker compose up -d
 ```
-### Bước 3: Mở port firewall
+Bước 4: kiểm tra kết quả:
 
 ```sh
-sudo ufw allow 6379 
-sudo ufw allow 6370  
-sudo ufw allow 5001
-sudo ufw allow 5000
+root@elk-service01:/elk-cluster-setup# docker ps -a
+CONTAINER ID   IMAGE                                                  COMMAND                  CREATED              STATUS              PORTS     NAMES
+ac233b60b956   docker.elastic.co/kibana/kibana:7.16.2                 "/bin/tini -- /usr/l…"   About a minute ago   Up About a minute             elk-kibana01
+3a6ca578d0c4   docker.elastic.co/elasticsearch/elasticsearch:7.16.2   "/bin/tini -- /usr/l…"   About a minute ago   Up About a minute             elk-coordinating01
+86871b607c91   pelin/haproxy-keepalived:v1.0.0                        "/haproxy-keepalived"    About a minute ago   Up About a minute             keepalived-haproxy01
+82b1923282aa   docker.elastic.co/logstash/logstash:7.16.2             "/usr/local/bin/dock…"   About a minute ago   Up About a minute             elk-logstash01
+root@elk-service01:/elk-cluster-setup#
 ```
+### **`2.5 Node elk-service02`**
 
-### **`Sau khi hoàn thành tiếp tục thực hiện tương tự đối với 2 node cluster redis-cluster02 và redis-cluster03`**
+- Thực hiện tương tự node `elk-service01` và cần thay đổi các trường thông tin sau:
+  - Tên các container hoạt động trên docker
+  - thay đổi địa chỉ IP của container đó trong các file cấu hình .yml
+  - thay đổi mode master và backup trong file cấu hình IP VIP
 
-- Nội dung file setup và config node `redis-cluster02` [tại đây]()
-- Nội dung file setup và config node `redis-cluster03` [tại đây]()
+- Nội dung file setup và config đặt [tại đây](https://github.com/thang290298/Ghi-chep-Logs/tree/main/ELK-Stack/2-Source/02-Multi-node/elk-service02)
+
+### **`2.6 Node elk-service03`**
+
+- Các thao tác thực hiện tương tự node `elk-service02`
+
+- Nội dung file setup và config đặt [tại đây](https://github.com/thang290298/Ghi-chep-Logs/tree/main/ELK-Stack/2-Source/02-Multi-node/elk-service03)
 
 
-### Truy cập node `redis-cluster01` thực hiện add cụm cluster cho 3 node vừa cài đặt
-
-- thực hiện các lệnh sau:
-```sh
-docker exec -it redis-cluster01 bash
-cd /usr/local/bin
-redis-cli --cluster create 10.10.10.17:6379 10.10.10.18:6379 10.10.10.19:6379
-```
-- kết quả:
-```sh
->>> Performing Cluster Check (using node 10.10.10.17:6379)
-M: 72b91b2ee3e93b5d19b33232a097fc059ea8ab04 10.10.10.17:6379
-   slots:[0-5460] (5461 slots) master
-M: fdcff584aaa53203e5c488a4e808cf84f0204f8d 10.10.10.19:6379
-   slots:[10923-16383] (5461 slots) master
-M: d6041a7b01c46e6129737655c41c029c2667f3a3 10.10.10.18:6379
-   slots:[5461-10922] (5462 slots) master
-[OK] All nodes agree about slots configuration.
->>> Check for open slots...
->>> Check slots coverage...
-[OK] All 16384 slots covered.
-root@redis01:/usr/local/bin#
-```
-- Để có 1 cụm redis cluster cần có ít nhất và node và trong trường hợp các node master cần có các bản replicas thì cần ít nhất là 6 node tương ứng 3 slave cho 3 master
