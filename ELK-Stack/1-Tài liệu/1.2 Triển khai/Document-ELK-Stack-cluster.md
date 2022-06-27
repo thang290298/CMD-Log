@@ -449,3 +449,53 @@ root@elk-service01:/elk-cluster-setup#
 - Nội dung file setup và config đặt [tại đây](https://github.com/thang290298/Ghi-chep-Logs/tree/main/ELK-Stack/2-Source/02-Multi-node/elk-service03)
 
 
+# Phần III. Kiểm tra hệ thống sau khi cài đặt
+- sủ dụng IP VIP
+### 1. Elasticsearch
+-  Kiểm tra danh sách các node trong cụm sau khi đã cài đặt
+  - Link: http://192.168.70.63:9201/_cat/nodes?v
+
+<h3 align="center"><img src="../../../ELK-Stack/03-Images/dosc/48.png"></h3>
+
+- Kiểm tra thông tin node master:
+  - Master:
+```sh
+root@elk-service01:~# curl -XGET '192.168.70.63:9201/_cat/master?v'
+id                     host        ip          node
+W8lUBNqXQJ2UxYUv6iyuNw 10.10.10.10 10.10.10.10 elk-master
+root@elk-service01:~#
+```
+- Kiểm tra trạng thái cụm:
+```sh
+root@elk-service01:~# curl -XGET '192.168.70.63:9200/_cluster/health?pretty'
+{
+  "cluster_name" : "elk-cluster",
+  "status" : "green",
+  "timed_out" : false,
+  "number_of_nodes" : 7,
+  "number_of_data_nodes" : 3,
+  "active_primary_shards" : 9,
+  "active_shards" : 18,
+  "relocating_shards" : 0,
+  "initializing_shards" : 0,
+  "unassigned_shards" : 0,
+  "delayed_unassigned_shards" : 0,
+  "number_of_pending_tasks" : 0,
+  "number_of_in_flight_fetch" : 0,
+  "task_max_waiting_in_queue_millis" : 0,
+  "active_shards_percent_as_number" : 100.0
+}
+root@elk-service01:~#
+```
+
+
+### 1. Kibana
+- Link: http://192.168.70.63:5602/app/home
+
+<h3 align="center"><img src="../../../ELK-Stack/03-Images/dosc/49.png"></h3>
+
+### HAproxy
+
+- Link: http://192.168.70.63:8080/stats
+
+<h3 align="center"><img src="../../../ELK-Stack/03-Images/dosc/50.png"></h3>
