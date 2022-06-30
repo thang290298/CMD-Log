@@ -1,4 +1,4 @@
-<h1 align="center">Tổng hợp vê lưu trữu data trên Elasticsearch</h1>
+<h1 align="center">Định tuyến và phân bổ dữ liệu trong Elasticsearch</h1>
 
 # Phần I. Path data
 ## 1. Data Path
@@ -11,8 +11,75 @@
 path.data: /var/data/elasticsearch
 path.logs: /var/log/elasticsearch
 ```
-## 2. Cơ chế lưu trữ data trong cụm Cluster
+## 2. Cơ chế lưu trữ data
 - Trong một cụm Cluster khi dữ liệu được đẩy về từ Logstash sẽ được thông báo đến node master, từ đây node master thực hiên kiểm tra, phân công nhiệm vụ xử lý dữ liệu chuyển về và quyết định dữ liệu logs đó sẽ được lưu trữ tại đâu tùy theo cấu hình hiền thết lập về số lượng primary shard và replicas shard được áp dụng cho index 
-- Hệ thống đảm bảo các primary shard và replicas shard của một index sẽ được lưu trữ trên nhiều server khác nhau và cùng ghi dữ liệu đồng thời trên các server
-- Khi 1 node trong cụm cluster đạt một múc sử dụng dung lượng disk nhất định không thể ghi thêm dữ liệu vào node, hệ thống sẽ thực hiện dừ ghi dữ liệu trên node đó và đẩy dữ liệu vào 1 node khác. Để thực hiện điều này cần thực hiện cấu hình mức độ cảnh bảo sử dụng trên các node để node đó có thể thoog báo đến master node tình trạng thái lưu trữ khi có yêu cầu lưu trư data
-- Tương tụ đối vói 1 node 
+- Hệ thống đảm bảo các primary shard và replicas shard của một index sẽ được lưu trữ trên nhiều server khác nhau và cùng ghi dữ liệu đồng thời trên các server đã được master chỉ định
+- Khi 1 node trong cụm cluster đạt một múc sử dụng dung lượng disk nhất định không thể ghi thêm dữ liệu vào node, hệ thống sẽ thực hiện dừng ghi dữ liệu trên node đó và đẩy dữ liệu vào 1 node khác. 
+
+<h3 align="center"><img src="../../../ELK-Stack/03-Images/dosc/51.png"></h3>
+
+# Phần II. Định tuyến và phân bổ dữ liệu trong cụm
+- Shard allocation là tiến trình phân bổ các shard bên trong các node data, được diễn ra trong quá trình recovery, phân bổ replicas, tái cân bằng dữ liệu hoặc trong tường hợp thêm hoặc xóa node trong hệ thống cluster
+- Roles Master là role chính trong vấn đề quyết định phân bổ các shard đến các node như thế nào, ở thời điểm di chuyển shard giữa các node cần thực hiện tại cân bằng cụm cluster 
+- Một số Phương pháp cấu hình cài đặt kiểm soát phân bổ các shard
+  - `Cluster-level shard allocation settings`: Kiểm soát phân bổ và tái cân bằng trong trong cụm
+  - `Disk-based shard allocation settings`: Giải thích và thiết lập về không gian lưu trữ dữ liệu
+  - `Shard allocation awareness and Forced awareness`: Kiểm soát các phân đoạn có thể phân phối thông qua khu vục khác nhau hay giống nhau
+  - `Cluster-level shard allocation filtering`: cho phép các node thuộc group thực hiện phân bổ có chọn lọc để có thể loại bỏ một số node
+
+## 1. Cluster-level shard allocation settings
+
+- **`cluster.routing.allocation.enable`**: Bật hoặc tăt phân bổ  các loại shard riêng biệt
+  - `all (dèault)`: cho phép thực hiện phân bổ tất cả các loại shard
+  - `primaries`: Chỉ cho phép phân bổ primaries mà không thực hiện phân bổ replicas shrads
+  - `new_primaries`: Chỉ cho phép phân bổ các  primary shards của các indices mới
+  - `none`: không thực hiện phân bổ shards của các indices dưới bất kỳ hình thức nào
+
+Việc thực hiện cấu hình seting không ảnh hưởng đến sự không phục của Primary shards tại node đó khi thực hiện khởi động lại node. Khi khởi đông lại thành công node thực hiện coppy các primary shard chưa được lưu chỉ định vị trí lưu trữ và thực hiện phục hồi lại các primary shard đó ngay lập tức 
+
+Ví dụ: 
+```sh
+PUT _cluster/settings
+{
+  "transient": {
+    "cluster.routing.allocation.enable ": all
+  }
+}
+```
+
+- **`cluster.routing.allocation.node_concurrent_incoming_recoveries`**: Cấu hình cho phép thực hiện số lượng phục hổi số lượng shard đầu vào ( thường sẽ là các relicas) đồng thời trên một node. `Default 2`
+
+- **`cluster.routing.allocation.node_concurrent_outgoing_recoveries`**: Cấu hình cho phép thực hiện số lượng phục hổi số lượng shard đi ra bên ngoài đồng thời trên một node. `Default 2`
+
+- **`cluster.routing.allocation.node_concurrent_recoveries`**: cho phép thực hiện cấu hình kết hợp giữa incoming và outgoing trong một dòng config
+
+- **`cluster.routing.allocation.node_initial_primaries_recoveries`**: Cấu hình thực hiện cho phép khôi phục một primary node bằng hính dữ liệu nằm trên local disk. Vì thực hiện trên local nên có thể thục hiện đồng thời một số lượng lớn tại một thời điểm. Default 4
+
+- **`cluster.routing.allocation.same_shard.host`: Nếu `true` cho phép thực hiện sao chép các shard phân bổ  trên cùng 1 node . Default `false`
+
+## 2. Shard rebalancing settings
+### Thông tin cơ bản
+- Cụm cân bằng khi mà số lượng shard mỗi node bình cân bằng mà không có sự tập trung của shard trên bất node riêng biệt nào trong cụm. Elasticsearch tự động thực hiện gọi đến các tiến trình thực hiện việc tái cân bằng khi di chuyển các shards giữa các node trong cụm cluster để đảm bảo tính cân bằng của cụm
+- Thực hiện tái cân bằng được thực hiện dựa trên rule allocation filtering và forced awareness. Việc áp dụng các rule có thể ảnh hưởng đến tính cân bằng dữ liệu giữa các node trong cụm. Đối với trường hợp này cụm sẽ cố gắng tối ứu việc cân bằng nhất có thể
+- Đối với trường hợp có các tầng dữ liệu cụ thể giống như data_hot, data_warm,.. Việc thực hiện cân bằng sẽ diễn ra trong các tầng riêng biệt của cụm
+
+### Cấu hình kiểm soát tái cân bằng shards trong Cluster
+
+- **`cluster.routing.rebalance.enable`**: Cho phép thực hiện cần bằng các kiểu shards:
+  - `all` (default): Cho phép thực hiện cân bằng cho tất cả các kiểu shards
+  - `primaries`: Chỉ cho phép cân bằng các primary shards.
+  - `replicas`: Chỉ cho phép cân bằng các replica shards.
+  - `none`: Không thực hiện bằng tất cả các kiểu shards của tất cả indices.
+
+- **`cluster.routing.allocation.allow_rebalance`**: Thực hiện chỉ định việc tái cân bằng shard trong cụm
+  - always: Luôn luôn
+  - indices_primaries_active: Tại thời điểm mà các primaries bên trong Cluster đã được phân bổ thành công
+  - indices_all_active ( Default ): Thực hiện khi mà primaries shards and replicas shards đã hoàn thành việc phân bổ
+
+- **`cluster.routing.allocation.cluster_concurrent_rebalance`**: Cho phép thực hiện vận tái cân bằng cùng một thời điểm diễn ra trong cụm. `Defaults 2`
+
+## Shard balancing heuristics settings
+
+Việc tái cân bằng dựa trên việc cân bằng dung lượng dựa trên các node. Tại thời điểm sử dụng disk trên các đạt mưc cân bằng tối đa thì việc tái cân bằng để chuyển dữ liệu từ 1 node sang 1 node trong cụm để tạo nên sự cân bằng sẽ dùng lại cho đến khi có có sự thay đổi dẫn đến mất cân bằng, sau đâu là một số cấu hình hỗ trơ tính toán đề đạt trạng thái cân bằng
+
+- **`cluster.routing.allocation.balance.shard`**: Xác định 
