@@ -20,20 +20,18 @@ services:
           "instances:\n"\
           "  - name: elasticsearch\n"\
           "    dns:\n"\
-          "      - elk-master\n"\
-          "      - elk-data01\n"\
-          "      - elk-data02\n"\
-          "      - elk-data03\n"\
+          "      - elk-master01\n"\
+          "      - elk-master02\n"\
+          "      - elk-master03\n"\
           "      - elk-coordinating01\n"\
           "      - elk-coordinating02\n"\
           "      - elk-coordinating03\n"\
-          "      - localhost\n"\
           "      - elk-kibana01\n"\
           "      - elk-kibana02\n"\
           "      - elk-kibana03\n"\
-          "      - elk-kibana\n"\
+          "      - elk-data01\n"\
+          "      - elk-data02\n"\
           "    ip:\n"\
-          "      - 127.0.0.1\n"\
           "      - 10.10.10.10\n"\
           "      - 10.10.10.11\n"\
           "      - 10.10.10.12\n"\
@@ -41,6 +39,7 @@ services:
           "      - 10.10.10.14\n"\
           "      - 10.10.10.15\n"\
           "      - 10.10.10.16\n"\
+          "      - 10.10.10.17\n"\
           "      - 10.10.10.20\n"\
           "      - 192.168.70.63\n"\
           > config/certs/instances.yml;

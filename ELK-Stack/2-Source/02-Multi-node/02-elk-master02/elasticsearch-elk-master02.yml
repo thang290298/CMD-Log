@@ -2,14 +2,14 @@
 ## Default Elasticsearch configuration from Elasticsearch base image.
 ## https://github.com/elastic/elasticsearch/blob/master/distribution/docker/src/docker/config/elasticsearch.yml
 #
-node.name: elk-data01
-node.roles: [data_hot, data_content, master, ingest]
+node.name: elk-master02
+node.roles: [master, data_hot, data_content, ingest]
 network.host: 0.0.0.0
 network.publish_host: 10.10.10.11
 http.port: 9200
 transport.port: 9300
-discovery.seed_hosts: ["elk-master", "elk-data01", "elk-data02", "elk-data03", "elk-coordinating01", "elk-coordinating02", "elk-coordinating03"]
-cluster.initial_master_nodes: ["elk-master", "elk-data01", "elk-data02"]
+discovery.seed_hosts: ["elk-master01", "elk-master02", "elk-master03", "elk-data01", "elk-data02", "elk-coordinating01", "elk-coordinating02", "elk-coordinating03"]
+cluster.initial_master_nodes: ["elk-master01", "elk-master02", "elk-master03"]
 bootstrap.memory_lock: true
 path.data: /usr/share/elasticsearch/data
 path.logs: /usr/share/elasticsearch/log
