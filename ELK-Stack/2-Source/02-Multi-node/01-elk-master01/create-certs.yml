@@ -1,9 +1,9 @@
 version: "2.2"
 
 services:
-  Create-certs:
+  create-certs:
     image: docker.elastic.co/elasticsearch/elasticsearch:${ELK_VERSION}
-    container_name: Create-certs
+    container_name: create-certs
     volumes:
       - ${CERTS_DIR}:/usr/share/elasticsearch/config/certs
     user: "0"
