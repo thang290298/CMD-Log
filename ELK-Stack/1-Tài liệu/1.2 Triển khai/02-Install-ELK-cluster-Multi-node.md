@@ -205,7 +205,7 @@ sudo ufw allow 9300
 ### 1.5 Tạo file `.env` chứa các thông tin thiết lập hệ thống
 - Nội dung:
 ```sh
-# Phiên bản ELK Stack sử dụng để cài đặt
+echo "# Phiên bản ELK Stack sử dụng để cài đặt
 ELK_VERSION=7.17.5
 # Set the cluster name
 CLUSTER_NAME=elk-cluster
@@ -227,9 +227,10 @@ CERTS_DIR=/elasticsearch/certs/
 CERTS_DIR_CONTAINER=/usr/share/elasticsearch/config/certs
 KIBANA_DIR=/elasticsearch/kibana/
 # Set to 'basic' or 'trial' to automatically start the 30-day trial
-LICENSE=trial
+LICENSE=basic
 # repo snapshot
 PATH_REPO=/elasticsearch/snapshots/
+" >> .env
 ```
 ### 1.6 Cài đặt một số gói packet cần thiết
 ```sh
@@ -242,11 +243,9 @@ apt-get install -y zip unzip
 
 ### 2.1 Allow thêm các port
 ```sh
-sudo ufw allow 9201
-sudo ufw allow 5602
+sudo ufw allow 9200
 sudo ufw allow 5601
 sudo ufw allow 8080
-sudo ufw allow 5044
 sudo ufw allow 5000
 ```
 ### 2.2 Tạo thư mục lư trữ data cho kibana
@@ -263,17 +262,52 @@ echo 'net.ipv4.ip_nonlocal_bind = 1' >> /etc/sysctl.conf
 ## 2. Cài đặt hệ thống ELK Cluster 
 >### **`1. Trên các node master`**
 
-- Truy cập thư mục **`/elk-setup`** để thực hiện các bước tiếp theo
-
 ### 2.1: ELk-Master01
+- Truy cập thư mục **`/elk-setup`** để thực hiện các bước tiếp theo
+```sh
+cd /elk-setup
+```
+**Chuẩn bị các file setup**
+- Tạo file generation SSL có tên `create-certs.yml` có [nội dung](https://github.com/thang290298/Ghi-chep-Logs/blob/main/ELK-Stack/2-Source/02-Multi-node/01-elk-master01/create-certs.yml)
+
+- Tạo file config `elasticsearch-elk-master01.yml` sử dụng cho elasticsearch nội dung [tại đây](https://github.com/thang290298/Ghi-chep-Logs/blob/main/ELK-Stack/2-Source/02-Multi-node/01-elk-master01/elasticsearch-elk-master01.yml)
+
+- Tạo file setup `docker-compose.yml` nội dung [tại đây](https://github.com/thang290298/Ghi-chep-Logs/blob/main/ELK-Stack/2-Source/02-Multi-node/01-elk-master01/docker-compose.yml)
+
+
+- Kiểm tra danh sách file: file `.env` được khởi tạo ở bước cấu hình chung
+```sh
+root@elk-master:~/ELK-Stack/02-Multi-node/01-elk-master01# ls -alh
+total 24K
+drwxr-xr-x  2 root root 4.0K Jul  5 10:18 .
+drwxr-xr-x 10 root root 4.0K Jul  5 09:54 ..
+-rw-r--r--  1 root root  824 Jul  5 09:54 .env
+-rw-r--r--  1 root root 2.0K Jul  5 09:56 create-certs.yml
+-rw-r--r--  1 root root  820 Jul  5 09:54 docker-compose.yml
+-rw-r--r--  1 root root 1.4K Jul  5 09:54 elasticsearch-elk-master01.yml
+root@elk-master:~/ELK-Stack/02-Multi-node/01-elk-master01#
+```
+
 **Tạo chứng chỉ SSL Self-sign**
 
 
-- Tạo file generation SSL có tên `create-certs.yml` có [nội dung](https://github.com/thang290298/Ghi-chep-Logs/blob/main/ELK-Stack/2-Source/02-Multi-node/01-elk-master01/certs.yml)
 
 - Thực hiện lệnh :
 ```sh
-docker compose -f create-certs.yml run --rm create-certs
+root@elk-master:~/elk-setup# docker-compose -f create-certs.yml run --rm create-certs
+Creating network "01-elk-master01_default" with the default driver
+Creating CA
+Archive:  config/certs/ca.zip
+   creating: config/certs/ca/
+  inflating: config/certs/ca/ca.crt  
+  inflating: config/certs/ca/ca.key  
+Creating certs
+Archive:  config/certs/certs.zip
+   creating: config/certs/elasticsearch/
+  inflating: config/certs/elasticsearch/elasticsearch.crt  
+  inflating: config/certs/elasticsearch/elasticsearch.key  
+Setting file permissions
+root@elk-master:~/elk-setup#
 ```
 
 - Truy cập thư mục `/elasticsearch/certs/` kiểm tra kết quả:
@@ -304,45 +338,181 @@ scp /elasticsearch/certs/* root@10.10.10.17:/elasticsearch/certs/
 
 **Cài đặt Elasticsearch**
 
-- Tạo file config `elasticsearch-elk-master01.yml` sử dụng cho elasticsearch nội dung [tại đây](https://github.com/thang290298/Ghi-chep-Logs/blob/main/ELK-Stack/2-Source/02-Multi-node/01-elk-master01/elasticsearch-elk-master01.yml)
-
-- Tạo file setup `docker-compose.yml` nội dung [tại đây](https://github.com/thang290298/Ghi-chep-Logs/blob/main/ELK-Stack/2-Source/02-Multi-node/01-elk-master01/docker-compose.yml)
-
 - chạy lệnh setup
 ```sh
 docker compose up -d
 ```
-Bước 4: kiểm tra kết quả:
-
-<h3 align="center"><img src="../../../ELK-Stack/03-Images/dosc/40.png"></h3>
-
+- kiểm tra kết quả:
+```sh
+root@elk-master:~/elk-setup# curl -s -XGET POST --cacert /elasticsearch/certs/ca/ca.crt -u elastic:Password2022 'https://elk-master01:9200'
+{
+  "name" : "elk-master01",
+  "cluster_name" : "elk-cluster",
+  "cluster_uuid" : "_na_",
+  "version" : {
+    "number" : "7.17.5",
+    "build_flavor" : "default",
+    "build_type" : "docker",
+    "build_hash" : "8d61b4f7ddf931f219e3745f295ed2bbc50c8e84",
+    "build_date" : "2022-06-23T21:57:28.736740635Z",
+    "build_snapshot" : false,
+    "lucene_version" : "8.11.1",
+    "minimum_wire_compatibility_version" : "6.8.0",
+    "minimum_index_compatibility_version" : "6.0.0-beta1"
+  },
+  "tagline" : "You Know, for Search"
+}
+root@elk-master:~/elk-setup#
+```
 
 
 ### 2.2: ELk-Master02
 
-- Thực hiện Cài đặt Elasticsearch tương tự đối với node `ELk-Master01`
-- Nội dung file [elasticsearch-elk-master02.yml](https://github.com/thang290298/Ghi-chep-Logs/blob/main/ELK-Stack/2-Source/02-Multi-node/02-elk-master02/elasticsearch-elk-master02.yml)
+**Giả nén SSL**
+```sh
+root@elk-master02:~# cd /elasticsearch/certs/ 
+root@elk-master02:/elasticsearch/certs# ll
+total 20
+drwxr-xr-x 2 1000 1000 4096 Jul  5 10:23 ./
+drwxr-xr-x 6 1000 1000 4096 Jul  2 10:53 ../
+-rw------- 1 root root 2511 Jul  5 10:23 ca.zip
+-rw------- 1 root root 2804 Jul  5 10:23 certs.zip
+-rw-r--r-- 1 root root  523 Jul  5 10:23 instances.yml
+root@elk-master02:/elasticsearch/certs# unzip ca.zip 
+Archive:  ca.zip
+   creating: ca/
+  inflating: ca/ca.crt               
+  inflating: ca/ca.key               
+root@elk-master02:/elasticsearch/certs# unzip certs.zip
+Archive:  certs.zip
+   creating: elasticsearch/
+  inflating: elasticsearch/elasticsearch.crt  
+  inflating: elasticsearch/elasticsearch.key  
+root@elk-master02:/elasticsearch/certs#
+```
+**Chuẩn bị các file setup**
+- Truy cập thư mục **`/elk-setup`** để thực hiện các bước tiếp theo
+```sh
+cd /elk-setup
+```
+- Thực hiện Cài đặt Elasticsearch tương tự đối với node `ELk-Master01` với các file sau:
+  - Nội dung file [elasticsearch-elk-master02.yml](https://github.com/thang290298/Ghi-chep-Logs/blob/main/ELK-Stack/2-Source/02-Multi-node/02-elk-master02/elasticsearch-elk-master02.yml)
 
-- Nội dung file [docker-compose.yml](https://github.com/thang290298/Ghi-chep-Logs/blob/main/ELK-Stack/2-Source/02-Multi-node/02-elk-master02/docker-compose.yml)
+  - Nội dung file [docker-compose.yml](https://github.com/thang290298/Ghi-chep-Logs/blob/main/ELK-Stack/2-Source/02-Multi-node/02-elk-master02/docker-compose.yml)
+
+ - Kiểm tra danh sách file:
+ ```sh
+ root@elk-master02:~/elk-setup# ll -alh
+total 56K
+drwxr-xr-x  2 root root 4.0K Jul  5 10:41 ./
+drwxr-xr-x 10 root root 4.0K Jul  5 10:37 ../
+-rw-r--r--  1 root root  824 Jul  5 10:37 .env
+-rw-r--r--  1 root root  819 Jul  5 10:37 docker-compose.yml
+-rw-r--r--  1 root root 1.4K Jul  5 10:37 elasticsearch-elk-master02.yml
+root@elk-master02:~/elk-setup#
+```
+**Cài đặt Elasticsearch**
 
 - chạy lệnh setup
 ```sh
 docker compose up -d
 ```
+- kiểm tra kết quả:
+```sh
+root@elk-master02:~/elk-setup# curl -s -XGET POST --cacert /elasticsearch/certs/ca/ca.crt -u elastic:Password2022 'https://elk-master02:9200'
+{
+  "name" : "elk-master02",
+  "cluster_name" : "elk-cluster",
+  "cluster_uuid" : "G_kv-XzfTMOUNMLZ42jUKw",
+  "version" : {
+    "number" : "7.17.5",
+    "build_flavor" : "default",
+    "build_type" : "docker",
+    "build_hash" : "8d61b4f7ddf931f219e3745f295ed2bbc50c8e84",
+    "build_date" : "2022-06-23T21:57:28.736740635Z",
+    "build_snapshot" : false,
+    "lucene_version" : "8.11.1",
+    "minimum_wire_compatibility_version" : "6.8.0",
+    "minimum_index_compatibility_version" : "6.0.0-beta1"
+  },
+  "tagline" : "You Know, for Search"
+}
+root@elk-master02:~/elk-setup#
+```
+
 
 ### 2.3: ELk-Master03
+**Giả nén SSL**
+```sh
+cd /elasticsearch/certs/ 
+unzip ca.zip
+unzip certs.zip
+```
+
+**Tạo file setup và config**
+- Truy cập thư mục **`/elk-setup`** để thực hiện các bước tiếp theo
+```sh
+cd /elk-setup
+```
 - Thực hiện Cài đặt Elasticsearch tương tự đối với node `ELk-Master01` và `ELk-Master02`
 - Nội dung file [elasticsearch-elk-master03.yml](https://github.com/thang290298/Ghi-chep-Logs/blob/main/ELK-Stack/2-Source/02-Multi-node/03-elk-master03/elasticsearch-elk-master03.yml)
 
 - Nội dung file [docker-compose.yml](https://github.com/thang290298/Ghi-chep-Logs/blob/main/ELK-Stack/2-Source/02-Multi-node/03-elk-master03/docker-compose.yml)
 
-- chạy lệnh setup
+- Kiểm tra danh sách file:
+```sh
+root@elk-master03:~/elk-setup# ll -alh
+total 20
+drwxr-xr-x  2 root root 4096 Jul  5 11:24 ./
+drwxr-xr-x 10 root root 4096 Jul  5 11:24 ../
+-rw-r--r--  1 root root  824 Jul  5 11:24 .env
+-rw-r--r--  1 root root  819 Jul  5 11:24 docker-compose.yml
+-rw-r--r--  1 root root 1436 Jul  5 11:24 elasticsearch-elk-master03.yml
+root@elk-master03:~/elk-setup#
+```
+
+**Cài đặt Elasticsearch**
 ```sh
 docker compose up -d
+```
+- Kiểm tra
+```sh
+root@elk-master03:~/elk-setup# curl -s -XGET POST --cacert /elasticsearch/certs/ca/ca.crt -u elastic:Password2022 'https://elk-master02:9200'
+{
+  "name" : "elk-master03",
+  "cluster_name" : "elk-cluster",
+  "cluster_uuid" : "G_kv-XzfTMOUNMLZ42jUKw",
+  "version" : {
+    "number" : "7.17.5",
+    "build_flavor" : "default",
+    "build_type" : "docker",
+    "build_hash" : "8d61b4f7ddf931f219e3745f295ed2bbc50c8e84",
+    "build_date" : "2022-06-23T21:57:28.736740635Z",
+    "build_snapshot" : false,
+    "lucene_version" : "8.11.1",
+    "minimum_wire_compatibility_version" : "6.8.0",
+    "minimum_index_compatibility_version" : "6.0.0-beta1"
+  },
+  "tagline" : "You Know, for Search"
+}
+root@elk-master03:~/elk-setup#
 ```
 
 >### **`1. Trên các node Service`**
 ### 2.4: ELk-Service01
+**Giả nén SSL và tạo file .pem cho HAproxy**
+```sh
+cd /elasticsearch/certs/ 
+unzip ca.zip
+unzip certs.zip
+cd elasticsearch
+cat elasticsearch.key elasticsearch.crt > elasticsearch.pem
+```
+**Tạo file setup và config**
+- Truy cập thư mục **`/elk-setup`** để thực hiện các bước tiếp theo
+```sh
+cd /elk-setup
+```
 
 **`elk-coordinating01`**
 - Tạo file config `elasticsearch-elk-coordinating01.yml` sử dụng cho elasticsearch có [nội dung](https://github.com/thang290298/Ghi-chep-Logs/blob/main/ELK-Stack/2-Source/02-Multi-node/04-elk-service01/elasticsearch-elk-coordinating01.yml)
@@ -373,6 +543,7 @@ path.config: /usr/share/logstash/pipeline
 - Tạo file pipeline nhận dự liệu được gửi đến thông qua port 5000 và sau khi xử lý dữ liệu sẽ trả dữ liệu về cụm `Elasticsearch` 
 
 ```sh
+# vi logstash/pipeline/message.yml
 input {
   beats {
     port => 5000
@@ -415,7 +586,7 @@ output {
 mkdir -p keepalived-haproxy/ keepalived-haproxy/keepalived keepalived-haproxy/haproxy
 ```
 
-- chạy lệnh setup
+**Cài đặt service**
 ```sh
 docker compose up -d
 ```
@@ -423,28 +594,114 @@ Bước 4: kiểm tra kết quả:
 
 ```sh
 root@elk-service01:/elk-cluster-setup# docker ps -a
-CONTAINER ID   IMAGE                                                  COMMAND                  CREATED              STATUS              PORTS     NAMES
-ac233b60b956   docker.elastic.co/kibana/kibana:7.16.2                 "/bin/tini -- /usr/l…"   About a minute ago   Up About a minute             elk-kibana01
-3a6ca578d0c4   docker.elastic.co/elasticsearch/elasticsearch:7.16.2   "/bin/tini -- /usr/l…"   About a minute ago   Up About a minute             elk-coordinating01
-86871b607c91   pelin/haproxy-keepalived:v1.0.0                        "/haproxy-keepalived"    About a minute ago   Up About a minute             keepalived-haproxy01
-82b1923282aa   docker.elastic.co/logstash/logstash:7.16.2             "/usr/local/bin/dock…"   About a minute ago   Up About a minute             elk-logstash01
+CONTAINER ID   IMAGE                                                  COMMAND                  CREATED          STATUS          PORTS     NAMES
+cdee928e6bc7   pelin/haproxy-keepalived:v1.0.0                        "/haproxy-keepalived"    27 minutes ago   Up 37 seconds             keepalived-haproxy01
+792bc972a8ca   docker.elastic.co/logstash/logstash:7.17.5             "/usr/local/bin/dock…"   27 minutes ago   Up 28 seconds             elk-logstash01
+119753b37e7b   docker.elastic.co/elasticsearch/elasticsearch:7.17.5   "/bin/tini -- /usr/l…"   27 minutes ago   Up 36 seconds             elk-coordinating01
+bdeb2ea36eb1   docker.elastic.co/kibana/kibana:7.17.5                 "/bin/tini -- /usr/l…"   27 minutes ago   Up 28 seconds             elk-kibana01
 root@elk-service01:/elk-cluster-setup#
 ```
+
+**kiểm tra các dịch vụ**
+- haproxy-keepalived: Do IP VIP mới được thiết lập trên 1 node dẫn đến ở thời điểm hiện tại node này sẽ là được gán IP VIP cho dải Public và Private
+<h3 align="center"><img src="../../../ELK-Stack/03-Images/dosc/66.png"></h3>
+
+- elk-coordinating01
+```sh
+root@elk-service01:~/elk-cluster-setup# curl -s -XGET POST --cacert /elasticsearch/certs/ca/ca.crt -u elastic:Password2022 'https://elk-coordinating01:9200'
+{
+  "name" : "elk-coordinating01",
+  "cluster_name" : "elk-cluster",
+  "cluster_uuid" : "G_kv-XzfTMOUNMLZ42jUKw",
+  "version" : {
+    "number" : "7.17.5",
+    "build_flavor" : "default",
+    "build_type" : "docker",
+    "build_hash" : "8d61b4f7ddf931f219e3745f295ed2bbc50c8e84",
+    "build_date" : "2022-06-23T21:57:28.736740635Z",
+    "build_snapshot" : false,
+    "lucene_version" : "8.11.1",
+    "minimum_wire_compatibility_version" : "6.8.0",
+    "minimum_index_compatibility_version" : "6.0.0-beta1"
+  },
+  "tagline" : "You Know, for Search"
+}
+root@elk-service01:~/elk-cluster-setup#
+```
+
+- kibana01 sử dụng IP VIP: https://192.168.70.63:5602
+<h3 align="center"><img src="../../../ELK-Stack/03-Images/dosc/67.png"></h3>
+
 ### 2.5: ELk-Service02
+**Chuần bị**
+- Thực hiện tương tự node `elk-service01` :
+- Nội dung files tương ứng
+  - Cấu hình config [keepalived-haproxy](https://github.com/thang290298/Ghi-chep-Logs/tree/main/ELK-Stack/2-Source/02-Multi-node/05-elk-service02/keepalived-haproxy)
+  - Nội dung cấu hình `config` và `pipeline` sử dụng cho [logstash](https://github.com/thang290298/Ghi-chep-Logs/tree/main/ELK-Stack/2-Source/02-Multi-node/05-elk-service02/logstash)
+  - file config [elasticsearch-elk-coordinating02.yml](https://github.com/thang290298/Ghi-chep-Logs/blob/main/ELK-Stack/2-Source/02-Multi-node/05-elk-service02/elasticsearch-elk-coordinating02.yml)
+  - file config [elk-kibana02.yml](https://github.com/thang290298/Ghi-chep-Logs/blob/main/ELK-Stack/2-Source/02-Multi-node/05-elk-service02/elk-kibana02.yml)
+  - file config [docker-compose.yml](https://github.com/thang290298/Ghi-chep-Logs/blob/main/ELK-Stack/2-Source/02-Multi-node/05-elk-service02/docker-compose.yml)
 
-- Thực hiện tương tự node `elk-service01` và cần thay đổi các trường thông tin sau:
-  - Tên các container hoạt động trên docker
-  - thay đổi địa chỉ IP của container đó trong các file cấu hình .yml
-  - thay đổi mode master và backup trong file cấu hình IP VIP
+**Cài đặt service**
+```sh
+docker compose up -d
+```
+**kiểm tra service**
+- Kiểm tra trạng thái container
+```sh
+root@elk-service02:/elk-cluster-setup# docker ps -a
+CONTAINER ID   IMAGE                                                  COMMAND                  CREATED          STATUS          PORTS     NAMES
+b4f842c7aa7c   pelin/haproxy-keepalived:v1.0.0                        "/haproxy-keepalived"    20 seconds ago   Up 17 seconds             keepalived-hapro
+888829ac5811   docker.elastic.co/logstash/logstash:7.17.5             "/usr/local/bin/dock…"   20 seconds ago   Up 16 seconds             elk-logstash02
+a769d8cca586   docker.elastic.co/elasticsearch/elasticsearch:7.17.5   "/bin/tini -- /usr/l…"   20 seconds ago   Up 16 seconds             elk-coordinating
+226f8eeb2bde   docker.elastic.co/kibana/kibana:7.17.5                 "/bin/tini -- /usr/l…"   20 seconds ago   Up 16 seconds             elk-kibana02
+root@elk-service02:/elk-cluster-setup#
+```
+- haproxy-keepalived: khi node service02 hoàn thành setup IP VIP local sẽ được chuyển về node này do được cấu hình làm master trong file config
 
-- Nội dung file setup và config đặt [tại đây](https://github.com/thang290298/Ghi-chep-Logs/tree/main/ELK-Stack/2-Source/02-Multi-node/05-elk-service02)
+<h3 align="center"><img src="../../../ELK-Stack/03-Images/dosc/68.png"></h3>
 
+- elk-coordinating02
+```sh
+root@elk-service01:~/elk-cluster-setup# curl -s -XGET POST --cacert /elasticsearch/certs/ca/ca.crt -u elastic:Password2022 'https://elk-coordinating01:9200'
+{
+  "name" : "elk-coordinating02",
+  "cluster_name" : "elk-cluster",
+  "cluster_uuid" : "G_kv-XzfTMOUNMLZ42jUKw",
+  "version" : {
+    "number" : "7.17.5",
+    "build_flavor" : "default",
+    "build_type" : "docker",
+    "build_hash" : "8d61b4f7ddf931f219e3745f295ed2bbc50c8e84",
+    "build_date" : "2022-06-23T21:57:28.736740635Z",
+    "build_snapshot" : false,
+    "lucene_version" : "8.11.1",
+    "minimum_wire_compatibility_version" : "6.8.0",
+    "minimum_index_compatibility_version" : "6.0.0-beta1"
+  },
+  "tagline" : "You Know, for Search"
+}
+root@elk-service01:~/elk-cluster-setup#
+```
 ### 2.6: ELk-Service03
 
-- Các thao tác thực hiện tương tự node `elk-service01` và `elk-service02`
+**Chuần bị**
+- Cấu trúc file và thao tác thực hiện tương tự node `elk-service01` và `elk-service02`
 
-- Nội dung file setup và config đặt [tại đây](https://github.com/thang290298/Ghi-chep-Logs/tree/main/ELK-Stack/2-Source/02-Multi-node/05-elk-service03)
+- Nội dung file setup và config:
+  - Cấu hình config [keepalived-haproxy](https://github.com/thang290298/Ghi-chep-Logs/tree/main/ELK-Stack/2-Source/02-Multi-node/06-elk-service03/keepalived-haproxy)
+  - Nội dung cấu hình `config` và `pipeline` sử dụng cho [logstash](https://github.com/thang290298/Ghi-chep-Logs/tree/main/ELK-Stack/2-Source/02-Multi-node/06-elk-service03/logstash)
+  - file config [elasticsearch-elk-coordinating02.yml](https://github.com/thang290298/Ghi-chep-Logs/blob/main/ELK-Stack/2-Source/02-Multi-node/06-elk-service03/elasticsearch-elk-coordinating03.yml)
+  - file config [elk-kibana02.yml](https://github.com/thang290298/Ghi-chep-Logs/blob/main/ELK-Stack/2-Source/02-Multi-node/06-elk-service03/elk-kibana03.yml)
+  - file config [docker-compose.yml](https://github.com/thang290298/Ghi-chep-Logs/blob/main/ELK-Stack/2-Source/02-Multi-node/06-elk-service03/docker-compose.yml)
 
+**Cài đặt service**
+```sh
+docker compose up -d
+```
+**kiểm tra service**
+
+- Thực hiển các bước kiểm tra tương tự với 2 node bên trên
 
 >### **`1. Trên các node data`**
 
@@ -452,6 +709,18 @@ root@elk-service01:/elk-cluster-setup#
 
 ### 2.7: ELk-data01
 
+**Giả nén SSL**
+```sh
+cd /elasticsearch/certs/ 
+unzip ca.zip
+unzip certs.zip
+```
+**Chuẩn bị các file setup**
+
+- Truy cập thư mục **`/elk-setup`** để thực hiện các bước tiếp theo
+```sh
+cd /elk-setup
+```
 - Tạo file config `elasticsearch-elk-data01.yml` sử dụng cho elasticsearch có [nội dung](https://github.com/thang290298/Ghi-chep-Logs/blob/main/ELK-Stack/2-Source/02-Multi-node/07-elk-data01/elasticsearch-elk-data01.yml)
 
 - Tạo file setup `docker-compose.yml` nội dung [tại đây](https://github.com/thang290298/Ghi-chep-Logs/blob/main/ELK-Stack/2-Source/02-Multi-node/07-elk-data01/docker-compose.yml)
@@ -460,6 +729,10 @@ root@elk-service01:/elk-cluster-setup#
 ```sh
 docker compose up -d
 ```
+**Kiểm tra**
+
+
+
 ### 2.8: ELk-data02
 
 - Tạo file config `elasticsearch-elk-data02.yml` sử dụng cho elasticsearch có [nội dung](https://github.com/thang290298/Ghi-chep-Logs/blob/main/ELK-Stack/2-Source/02-Multi-node/07-elk-data02/elasticsearch-elk-data02.yml)
@@ -475,29 +748,40 @@ docker compose up -d
 - sủ dụng IP VIP
 ### 1. Elasticsearch
 -  Kiểm tra danh sách các node trong cụm sau khi đã cài đặt
-  - Link: http://192.168.70.63:9201/_cat/nodes?v
-
-<h3 align="center"><img src="../../../ELK-Stack/03-Images/dosc/48.png"></h3>
+```sh
+root@elk-master03:~# curl -s -XGET POST --cacert /elasticsearch/certs/ca/ca.crt -u elastic:Password2022 'https://elk-master03:9200/_cat/nodes?v'
+ip          heap.percent ram.percent cpu load_1m load_5m load_15m node.role master name
+10.10.10.11           68          78   0    0.58    0.59     0.56 hims      -      elk-master02
+10.10.10.16           32          59   0    0.00    0.04     0.12 clrtw     -      elk-data01
+10.10.10.12           42          65   0    0.28    0.07     0.02 himsv     -      elk-master03
+10.10.10.17           28          65   0    0.26    0.36     0.27 clrtw     -      elk-data02
+10.10.10.14           19          91   3    0.35    0.24     0.21 -         -      elk-coordinating02
+10.10.10.10           44          95   1    0.82    0.86     0.82 hims      *      elk-master01
+10.10.10.13           30          98   1    0.08    0.06     0.07 -         -      elk-coordinating01
+10.10.10.15            8          81   2    0.04    0.05     0.09 -         -      elk-coordinating03
+root@elk-master03:~#
+```
 
 - Kiểm tra thông tin node master:
   - Master:
 ```sh
-root@elk-service01:~# curl -XGET '192.168.70.63:9201/_cat/master?v'
+root@elk-master03:~# curl -s -XGET POST --cacert /elasticsearch/certs/ca/ca.crt -u elastic:Password2022 'https://elk-master03:9200/_cat/master?v'
 id                     host        ip          node
-W8lUBNqXQJ2UxYUv6iyuNw 10.10.10.10 10.10.10.10 elk-master
-root@elk-service01:~#
+iNVEG-hmTgeYYkb_HYnFkw 10.10.10.10 10.10.10.10 elk-master01
+root@elk-master03:~#
 ```
+
+
 - Kiểm tra trạng thái cụm:
 ```sh
-root@elk-service01:~# curl -XGET '192.168.70.63:9200/_cluster/health?pretty'
-{
+root@elk-master03:~# curl -s -XGET POST --cacert /elasticsearch/certs/ca/ca.crt -u elastic:Password2022 'https://elk-master03:9200/_cluster/health?pretty'{
   "cluster_name" : "elk-cluster",
   "status" : "green",
   "timed_out" : false,
-  "number_of_nodes" : 7,
-  "number_of_data_nodes" : 3,
-  "active_primary_shards" : 9,
-  "active_shards" : 18,
+  "number_of_nodes" : 8,
+  "number_of_data_nodes" : 5,
+  "active_primary_shards" : 13,
+  "active_shards" : 26,
   "relocating_shards" : 0,
   "initializing_shards" : 0,
   "unassigned_shards" : 0,
@@ -507,14 +791,14 @@ root@elk-service01:~# curl -XGET '192.168.70.63:9200/_cluster/health?pretty'
   "task_max_waiting_in_queue_millis" : 0,
   "active_shards_percent_as_number" : 100.0
 }
-root@elk-service01:~#
+root@elk-master03:~#
 ```
 
 
 ### 1. Kibana
-- Link: http://192.168.70.63:5602/app/home
+- Link: http://192.168.70.63:5602
 
-<h3 align="center"><img src="../../../ELK-Stack/03-Images/dosc/49.png"></h3>
+<h3 align="center"><img src="../../../ELK-Stack/03-Images/dosc/69.png"></h3>
 
 ### HAproxy
 
