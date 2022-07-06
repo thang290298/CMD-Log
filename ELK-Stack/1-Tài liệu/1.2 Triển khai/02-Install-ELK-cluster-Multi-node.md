@@ -156,8 +156,25 @@ Docker Compose version v2.5.0
 ```
 
 ### 1.2 Điểu chỉnh bộ nhớ ảo
+- Mmapfs lưu trữ các shard index trên file system (ánh xạ đến Lucene MMapDirectory) bằng cách ánh xạ các file đó vào ram ảo (mmap). Việc ánh xạ bộ nhớ thường sẽ được thiết lập có size bằng với size file được ảnh xạ, trong trường hợp ở đây là JVM heap được cấu hình sử dụng cho Elastich và được gán giá trị trong file setup
+
+- Theo quy tắc chung đặt ra số ram đặt cho JVM heap là 50% trên tổng ram vật lý trên 1 server, ở thời điểm hiện tại số ram tối đa mà JVM heap có thể hoạt động ổn định và hiệu quả là 32GB
+
+- - Elasticsarch được viết bằng ngôn ngữ lập trình java, theo mặc định thì Elasticsarch sẽ gọi đến JVM để hoạt động và JVM cần sử dụng ram cho caching
 
 Điều chỉnh số lượng mmap để tránh trường hợp hết bộ nhớ ảo
+- Công thực tính: 
+```sh
+# Cấu hình thiết lập
+vm.max_map_count=map_count
+# mỗi 1 đơn vị map_count thường có giá trị 128kb bộ nhớ hệ thống
+# Hiện tại mức ram hỗ trợ tối có thể sử dụng đối với JVM là 32GB nên có Công thực tính như sau:
+map_count= (1024 * 1024 * 32)/128 = 262144
+- trong đó: 
+ - (1024 * 1024 * 32) là giá trị quy đổi từ GB sang kb
+ - 128 là giá trị tương ứng với 1 đơn vị map_count có đơn vị tính kb
+```
+
 - cập nhật thông số trong file: `/etc/sysctl.conf`
 ```sh
 echo "vm.max_map_count=262144" >> /etc/sysctl.conf
@@ -166,8 +183,13 @@ echo "vm.max_map_count=262144" >> /etc/sysctl.conf
 ```sh
 sysctl -p
 ```
+- Với thông số thiết lập như trên thì mức cấu hình max là 262144 và nhỏ nhất dựa vào cấu hình hệ thống
 
 ### Tăng giới hạn mô tả file đang mở
+
+- Elasticsearch sử dụng rất nhiều file descriptors/file handles (connections [open ports], read/write files…) nên cần nofile đủ lớn. Con số 1024 (2^10) mà Linux system set default cho mỗi process không đủ dùng nên cần con số lớn hơn. 
+- Do source/destination ports trong TCP header chỉ dùng tới 16 bits nên con số maximum 65536 = 2^16 từ đây mà ra, port chỉ có thể nằm trong range [0, 2^16 - 1]
+
 - Thay đổi giá trị trong file `/etc/security/limits.conf`
 ```sh
 echo "- nofile 65536" >> /etc/security/limits.conf
@@ -190,8 +212,8 @@ echo "# List ip node elk Cluster
 
 ### 1.3 Tạo và phân quyền thư mục lưu trữ data và logs
 ```sh
-mkdir -p /elasticsearch/ /elasticsearch/data/ /elasticsearch/log/ /elasticsearch/certs/ /elasticsearch/snapshots/
-chown -R 1000:1000 /elasticsearch/ /elasticsearch/data/ /elasticsearch/log/ /elasticsearch/certs/ /elasticsearch/snapshots/
+mkdir -p /elasticsearch/ /elasticsearch/data/ /elasticsearch/logs/ /elasticsearch/certs/ /elasticsearch/snapshots/
+chown -R 1000:1000 /elasticsearch/ /elasticsearch/data/ /elasticsearch/logs/ /elasticsearch/certs/ /elasticsearch/snapshots/
 mkdir -p /elk-setup && cd /elk-setup
 
 ```
@@ -222,7 +244,7 @@ KIBANA_PORT=5601
 LOGSTASH_PORT=5000
 # Path
 ES_DATA=/elasticsearch/data/
-ES_LOGS=/elasticsearch/log/
+ES_LOGS=/elasticsearch/logs/
 CERTS_DIR=/elasticsearch/certs/
 CERTS_DIR_CONTAINER=/usr/share/elasticsearch/config/certs
 KIBANA_DIR=/elasticsearch/kibana/
@@ -253,7 +275,7 @@ sudo ufw allow 5000
 mkdir -p /kibana/ && chown -R 1000:1000 /kibana
 ```
 
-### 2.3 thiết lập cho phép sủ IP HA-proxy
+### 2.3 thiết lập cho phép sử dụng IP HA-proxy
 
 ```sh
 echo 'net.ipv4.ip_nonlocal_bind = 1' >> /etc/sysctl.conf
@@ -367,8 +389,8 @@ root@elk-master:~/elk-setup#
 
 
 ### 2.2: ELk-Master02
-
 **Giả nén SSL**
+
 ```sh
 root@elk-master02:~# cd /elasticsearch/certs/ 
 root@elk-master02:/elasticsearch/certs# ll
