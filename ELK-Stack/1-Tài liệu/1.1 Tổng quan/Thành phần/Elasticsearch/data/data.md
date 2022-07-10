@@ -103,3 +103,4 @@ PUT _cluster/settings
 - Trong trường hợp sử dụng các lớp dữ liệu thì Elasticsearch sẽ chủ động thực hiện cấu hình các quy tắc chọn lọc để các shard trong lớp dữ liệu tích hợp. Đối với mỗi tầng dữ liệu trình phân bổ các shard hoạt động độc lập và không có tác động đến dữ khả năng phân bổ shard trên các tầng dữ liệu khác
 
 - Nếu 1 node mà khả năng nhập dữ liệu nhanh hơn khả năng di chuyển dữ liệu đó sang node khác dẫn đến full data có thể xử lý bằng cách thực hiện cấu hình flood-stage watermark khi đó dữ liệu sẽ không ghi vào node đang gặp vấn đề. Nó sẽ tiếp tục ghi dữ liệu vao cụm khi mức dữ liệu sử dụng trên node bị ảnh hưởng giảm xuống dưới mức high watermark, Elasticsearch sẽ tự động xóa khỏi khối ghi
+
