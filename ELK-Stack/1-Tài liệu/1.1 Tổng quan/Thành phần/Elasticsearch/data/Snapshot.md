@@ -17,7 +17,7 @@
   - Google Cloud Storage (GCS)
   - Microsoft Azure
 
-> Lưu ý: Dữ liệu snapshot sẽ được lưu trữ đồng bộ trên tất cả các node được thiết lập lưu trữ snapshot
+> Lưu ý: Dữ liệu snapshot sẽ được lưu trữ đồng bộ trên tất cả các node được thiết lập repo cho lưu trữ snapshot
 # Phần II. Luồng hoạt động của Snapshot
 Để có thể tạo và lưu trữ dữ liệu snapshot từ Elasticsearch cần thực hiện thực hiện các bước sau:
 - b1: khởi tạo Repo lưu trữ (kho lưu trữ ): Sử dụng để lưu trữ dữ liệu snapshot
