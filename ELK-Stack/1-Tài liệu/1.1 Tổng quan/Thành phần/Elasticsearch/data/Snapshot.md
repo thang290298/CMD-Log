@@ -47,7 +47,7 @@ Có thể gắn các policy snapshot vào các `Index Lifecycle Policies`
 
 ## 1. Cách thức hoạt động
 
-- Snapshot hoạt động có khả năng động  cho phép khử trùng lặp dữ liệu để tránh tiêu tốn dung lượng và đường truyền mạng. Khi thực hiện 1 snapshots mới sẽ thực hiện đối chiếu dữ liệu với bản snapshot trước đó và ghi vào những thay đổi mới nhất kể từ bản snapshot gần nhất
+- Snapshot hoạt động có khả năng động  cho phép loại bỏ trùng lặp dữ liệu để tránh tiêu tốn dung lượng và đường truyền. Khi thực hiện 1 snapshots mới sẽ thực hiện đối chiếu dữ liệu với bản snapshot trước đó và ghi vào những thay đổi mới nhất kể từ bản snapshot gần nhất
 - khi thực hiện xóa 1 bản snapshot thì elasticsearch chỉ thực hiện xóa duy nhất các phân đoạn sử dụng cho bản snapshot đó mà không ảnh hưởng đến các bản snapshots còn lại được lưu trữu trong cùng một repository
 ## 2. Snapshot và shards allocation
 
