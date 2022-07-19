@@ -112,3 +112,10 @@ Có thể gắn các policy snapshot vào các `Index Lifecycle Policies`
 
 - Khi dữ liệu được thực hiện restore thì dữ liệu sẽ được phân bổ về lớp data ở thời điểm thực hiện bản snapshot đó. Dữ liệu sẽ được phân bổ ngẫu nhiên về các node dựa theo số primary và replicas
 
+
+
+
+# Tài liệu tham khảo
+
+- https://mincong.io/en/elasticsearch-snapshot-repository-structure/
+- https://www.elastic.co/guide/en/elasticsearch/reference/7.17/snapshots-register-repository.html#snapshots-read-only-repository
