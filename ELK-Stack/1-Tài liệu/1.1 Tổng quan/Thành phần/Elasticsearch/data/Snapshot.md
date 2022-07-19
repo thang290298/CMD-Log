@@ -1,6 +1,6 @@
 <h1 align="center">Elasticsearch Snapshot - Retore</h1>
 
-# Phần I. Tông quan
+# Phần I. Tổng quan
 - Snapshot là dữ liệu backup của cụm Elasticserch cluster, thường được sử dụng cho những mục đích sau:
   - Sao lưu dữ liệu cụm elasticsearch đình kỳ hàng ngày, hàng tuần, hàng tháng, hàng năm
   - Đảm bảo tính an toàn dữ liệu 
