@@ -1,7 +1,10 @@
 <h1 align="center">Elasticsearch Snapshot - Retore</h1>
 
 # Phần I. Tổng quan
-- Snapshot là dữ liệu backup của cụm Elasticserch cluster, thường được sử dụng cho những mục đích sau:
+- Elasticsearch không sử dụng tính năng backup thay vào đó sẽ sử dụng tính năng Snapshot để tạo ra các bản sao lưu dữ liệu tùy vào từng thời điểm nhất định dễn ra một cách định kỳ.
+- Snapshot là phương pháp hữu hiệu nhất khi sử dụng để thực hiện sao lưu dữ liệu của 1 cụm. Vì không thế thực hiện backup thư mục và dữ liệu elasticsearch của từng node để rồi thực hiện restore lên hệ thống Elasticsearch. Khi thực hiện như thế không cần sẽ phát sinh ra lỗi thiếu file dẫn đến restore không thành công gây ra lỗi hệ thống 
+
+- Snapshot là dữ liệu coppy của cụm Elasticserch cluster, thường được sử dụng cho những mục đích sau:
   - Sao lưu dữ liệu cụm elasticsearch đình kỳ hàng ngày, hàng tuần, hàng tháng, hàng năm
   - Đảm bảo tính an toàn dữ liệu 
   - Giảm dung lượng lưu trữ dữ liệu và tạo không gian lưu trữ dữ mới
@@ -47,8 +50,10 @@ Có thể gắn các policy snapshot vào các `Index Lifecycle Policies`
 
 ## 1. Cách thức hoạt động
 
-- Snapshot hoạt động có khả năng động  cho phép loại bỏ trùng lặp dữ liệu để tránh tiêu tốn dung lượng và đường truyền. Khi thực hiện 1 snapshots mới sẽ thực hiện đối chiếu dữ liệu với bản snapshot trước đó và ghi vào những thay đổi mới nhất kể từ bản snapshot gần nhất
+- Snapshot hoạt động có khả năng động cho phép loại bỏ trùng lặp dữ liệu để tránh tiêu tốn dung lượng và đường truyền. Khi thực hiện 1 snapshots mới sẽ thực hiện đối chiếu dữ liệu với bản snapshot trước đó và ghi vào những thay đổi mới nhất kể từ bản snapshot gần nhất
 - khi thực hiện xóa 1 bản snapshot thì elasticsearch chỉ thực hiện xóa duy nhất các phân đoạn sử dụng cho bản snapshot đó mà không ảnh hưởng đến các bản snapshots còn lại được lưu trữu trong cùng một repository
+
+- Do cụm hoạt động cluster nên khi xóa bản snapshot trên 1 node thì các node còn lại cũng sẽ mất
 ## 2. Snapshot và shards allocation
 
 - Để thực hiện tạo các bản snapshot thì elasticsearch thị hiện coppy các index primary shards, trong trường hợp mà các primary này đang được chuyển để tái phân bổ giữa các node thì elasticsearch sẽ thực hiện chờ cho đến việc di chuyển các index primary shards được hoàn tất. Trong trường hợp một hoặc nhiều primary có trạng thái available việc khởi tạo snapshot sẽ dẫn đến lỗi
