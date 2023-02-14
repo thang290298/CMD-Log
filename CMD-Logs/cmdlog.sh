@@ -45,6 +45,8 @@ elif cat /etc/*release | grep ^NAME | grep Ubuntu > /dev/null 2>&1; then
         OS_VER="Ubuntu18"
     elif [ $(lsb_release -c | grep Codename | awk '{print $2}') == 'focal' ] ;then 
         OS_VER="Ubuntu20"
+    elif [ $(lsb_release -c | grep Codename | awk '{print $2}') == 'kinetic' ] ;then 
+        OS_VER="Ubuntu22"
     fi 
 elif cat /etc/*release | grep ^NAME | grep Debian > /dev/null 2>&1; then
 
